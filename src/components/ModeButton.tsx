@@ -4,28 +4,27 @@ import type { ViewMode } from '../config/viewModes'
 type ModeButtonProps = {
   mode: ViewMode
   icon: LucideIcon
-  label: string
-  active: boolean
+  currentLabel: string
+  nextLabel: string
   onClick: () => void
 }
 
 export function ModeButton({
   mode,
   icon: Icon,
-  label,
-  active,
+  currentLabel,
+  nextLabel,
   onClick,
 }: ModeButtonProps) {
   return (
     <button
-      className={`mode-button${active ? ' is-active' : ''}`}
+      className="mode-button"
       data-mode={mode}
       onClick={onClick}
-      title={label}
-      aria-label={`${label} view`}
-      aria-pressed={active}
+      title={currentLabel + ' view · click for ' + nextLabel}
+      aria-label={currentLabel + ' view · click to switch to ' + nextLabel}
     >
-      <Icon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+      <Icon className="ui-icon" size={16} strokeWidth={2} aria-hidden="true" />
     </button>
   )
 }
