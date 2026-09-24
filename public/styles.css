@@ -300,26 +300,37 @@ article:focus-visible {
 }
 
 .nav-setting-option {
-  flex: 0 0 auto;
-  min-height: 28px;
-  padding: 0 9px;
-  border: 1px solid transparent;
-  border-radius: 7px;
+  flex: 0 0 32px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
   background: transparent;
   color: var(--text-soft);
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   line-height: 1;
+  letter-spacing: .02em;
   cursor: pointer;
-  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
 }
 
 .nav-setting-option:hover,
 .nav-setting-option:focus-visible {
   background: var(--surface-strong);
-  border-color: var(--border);
+  border-color: var(--border-strong);
   color: var(--text);
+}
+
+.nav-setting-option:active {
+  transform: translateY(1px);
 }
 
 .nav-setting-option.is-active {
@@ -953,6 +964,14 @@ article:focus-visible {
 
   .nav-setting-options {
     flex: 1;
+  }
+
+  .nav-setting-option {
+    flex-basis: 30px;
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 30px;
   }
 
   .post-page {
