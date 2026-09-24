@@ -8,7 +8,7 @@
 **GitHub Pages:** https://akcizur.github.io/kaap/  
 **Website reference:** https://dimple.blog  
 **Default branch:** main  
-**Documented revision:** 91fc05c7682e574953f87a507ce9e33601679f21
+**Documented revision:** 24 September 2026 · current single-navbar architecture
 
 ---
 
@@ -497,7 +497,6 @@ Používají jej:
 - header-inner,
 - main-content,
 - footer-inner,
-- nav-panel-inner,
 - nav-panel-inner.
 
 Design je proto úzký editorial column, ne široký dashboard.
@@ -825,7 +824,7 @@ Proto:
 | nový view mode | viewModes.ts + PostCard.tsx + CSS |
 | theme token | public/styles.css |
 | navbar action | App.tsx |
-| settings option | inline settings panel v App.tsx + App.tsx |
+| settings option | settings/search panel v App.tsx + App.tsx |
 | persistent preference | usePreferences.ts |
 | detail postu | PostPage.tsx |
 | build/base path | vite.config.ts |
