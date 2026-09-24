@@ -260,15 +260,19 @@ Pravidlo:
 
 Obsah se neřídí hoverem. Aktivní panel se vykresluje přímo uvnitř sticky headeru, ale je absolutně pozicovaný mimo běžný layout flow.
 
+Settings overlay obsahuje pouze jeden kruhový button pro každou funkci. Kliknutí mění hodnotu cyklicky, takže se nezobrazuje sada variantních tlačítek.
+
 ### Settings panel
 
     settings
       ↓
     nav-panel--settings
-      ├── view mode
-      ├── theme
-      ├── language
-      └── scale
+      ↓
+    four icon-only controls
+      ├── view mode (cycle)
+      ├── theme (toggle)
+      ├── language (toggle)
+      └── scale (cycle)
 
 ### Search panel
 
