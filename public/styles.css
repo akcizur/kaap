@@ -412,7 +412,19 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 .scale-100 { zoom: 1; }
 .scale-110 { zoom: 1.1; }
 
-.nav-link { color: var(--text-soft); }
+.nav-link {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+  color: var(--text-soft);
+}
+
+.nav-link:hover,
+.nav-link:focus-visible {
+  width: 32px;
+  min-width: 32px;
+  padding: 0;
+}
 
 @media (max-width: 980px) {
   .nav-group { gap: 4px; }
