@@ -31,8 +31,7 @@ Definuje:
     │   ├── components/
     │   │   ├── ModeButton.tsx
     │   │   ├── PostCard.tsx
-    │   │   ├── PostPage.tsx
-    │   │   └── ModeButton.tsx
+    │   │   └── PostPage.tsx
     │   ├── config/
     │   │   └── viewModes.ts
     │   ├── data/
@@ -82,7 +81,6 @@ Definuje:
        ├── src/hooks/usePreferences.ts
        ├── components/PostCard.tsx
        ├── components/PostPage.tsx
-       └── components/navbar settings.tsx
 
 CSS flow:
 
@@ -314,7 +312,7 @@ Při přidání nového view mode:
 1. ViewMode union,
 2. VIEW_MODE_ORDER,
 3. VIEW_MODES,
-4. Settings icon,
+4. navbar settings option,
 5. PostCard branch,
 6. CSS.
 
