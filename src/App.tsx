@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { Moon, Settings, Sun } from 'lucide-react'
 import { ModeButton } from './components/ModeButton'
 import { PostCard } from './components/PostCard'
 import { SettingsModal } from './components/SettingsModal'
@@ -15,6 +16,7 @@ export default function App() {
   const { theme, viewMode } = preferences
   const isDark = theme === 'dark'
   const currentMode = VIEW_MODES[viewMode]
+  const ThemeIcon = isDark ? Sun : Moon
 
   function handleSubscribe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -47,16 +49,16 @@ export default function App() {
               title="Settings"
               aria-label="Open settings"
             >
-              ⚙
+              <Settings className="ui-icon" size={16} strokeWidth={2} aria-hidden="true" />
             </button>
 
             <button
               className="icon-button"
               onClick={() => updatePreference('theme', isDark ? 'light' : 'dark')}
-              title="Toggle theme"
-              aria-label="Toggle theme"
+              title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+              aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
             >
-              {isDark ? '☀' : '☾'}
+              <ThemeIcon className="ui-icon" size={16} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </div>
