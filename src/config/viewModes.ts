@@ -1,31 +1,41 @@
+import {
+  Grid2X2,
+  List,
+  type LucideIcon,
+  Newspaper,
+  Rows3,
+} from 'lucide-react'
+
 export type ViewMode = 'list' | 'grid' | 'magazine' | 'compact'
 
-export const VIEW_MODES: Record<ViewMode, {
-  icon: string
+type ViewModeConfig = {
+  icon: LucideIcon
   label: string
   containerClass: string
   articleClassName: string
-}> = {
+}
+
+export const VIEW_MODES: Record<ViewMode, ViewModeConfig> = {
   list: {
-    icon: '≡',
+    icon: List,
     label: 'List',
     containerClass: 'posts posts-list',
     articleClassName: 'post post-list',
   },
   grid: {
-    icon: '⊞',
+    icon: Grid2X2,
     label: 'Grid',
     containerClass: 'posts posts-grid',
     articleClassName: 'post post-grid',
   },
   magazine: {
-    icon: '▦',
+    icon: Newspaper,
     label: 'Magazine',
     containerClass: 'posts posts-magazine',
     articleClassName: 'post post-magazine',
   },
   compact: {
-    icon: '☰',
+    icon: Rows3,
     label: 'Compact',
     containerClass: 'posts posts-compact',
     articleClassName: 'post post-compact',
