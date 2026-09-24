@@ -1,14 +1,20 @@
 import { type MouseEvent } from 'react'
-import { Check, Grid2X2, List, Newspaper, Rows3, Sun, Moon, X } from 'lucide-react'
+import { Check, Grid2X2, Languages, List, Moon, Newspaper, Rows3, Scaling, Sun, X } from 'lucide-react'
 import { VIEW_MODES, type ViewMode } from '../config/viewModes'
 
 type Theme = 'light' | 'dark'
+type Language = 'EN' | 'CZ'
+type Scale = 90 | 100 | 110
 
 type SettingsModalProps = {
   theme: Theme
   viewMode: ViewMode
+  language: Language
+  scale: Scale
   onThemeChange: (theme: Theme) => void
   onViewModeChange: (viewMode: ViewMode) => void
+  onLanguageChange: (language: Language) => void
+  onScaleChange: (scale: Scale) => void
   onClose: () => void
 }
 
@@ -19,16 +25,24 @@ const VIEW_ICONS = {
   compact: Rows3,
 } satisfies Record<ViewMode, typeof List>
 
+const LANGUAGES: Language[] = ['EN', 'CZ']
+const SCALES: Scale[] = [90, 100, 110]
+
 export function SettingsModal({
   theme,
   viewMode,
+  language,
+  scale,
   onThemeChange,
   onViewModeChange,
+  onLanguageChange,
+  onScaleChange,
   onClose,
 }: SettingsModalProps) {
   return (
     <div className="modal-backdrop" onClick={onClose} role="presentation">
       <div
+        id="display-settings"
         className="settings-modal"
         onClick={(event: MouseEvent<HTMLDivElement>) => event.stopPropagation()}
         role="dialog"
@@ -57,9 +71,28 @@ export function SettingsModal({
                 >
                   <Icon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
                   <span>{VIEW_MODES[mode].label}</span>
+                  {viewMode === mode && <Check className="ui-icon setting-check" size={14} strokeWidth={2.2} aria-hidden="true" />}
                 </button>
               )
             })}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-label">Language</div>
+          <div className="settings-grid settings-grid--theme">
+            {LANGUAGES.map(option => (
+              <button
+                key={option}
+                className={`setting-button${language === option ? ' is-active' : ''}`}
+                onClick={() => onLanguageChange(option)}
+                aria-pressed={language === option}
+              >
+                <Languages className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>{option}</span>
+                {language === option && <Check className="ui-icon setting-check" size={14} strokeWidth={2.2} aria-hidden="true" />}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -87,9 +120,29 @@ export function SettingsModal({
           </div>
         </div>
 
-        <button className="done-button" onClick={onClose} title="Done" aria-label="Done">
-          <Check className="ui-icon" size={15} strokeWidth={2.2} aria-hidden="true" />
-        </button>
+        <div className="settings-section">
+          <div className="settings-label">UI Scale</div>
+          <div className="settings-grid settings-grid--scale">
+            {SCALES.map(option => (
+              <button
+                key={option}
+                className={`setting-button${scale === option ? ' is-active' : ''}`}
+                onClick={() => onScaleChange(option)}
+                aria-pressed={scale === option}
+              >
+                <Scaling className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>{option}%</span>
+                {scale === option && <Check className="ui-icon setting-check" size={14} strokeWidth={2.2} aria-hidden="true" />}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-footer">
+          <button className="done-button" onClick={onClose} title="Done" aria-label="Done">
+            <Check className="ui-icon" size={15} strokeWidth={2.2} aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </div>
   )

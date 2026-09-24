@@ -1,4 +1,4 @@
-import { ArrowLeft, Clock, Tag } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import type { Post } from '../data/posts'
 
 type PostPageProps = {
@@ -23,21 +23,12 @@ export function PostPage({ post }: PostPageProps) {
         <h1 className="post-detail-title">{post.title}</h1>
 
         <div className="post-detail-meta">
-          <span className="post-date-text">{post.date}</span>
-          <span className="post-detail-meta-separator">·</span>
-          <span className="post-date-text">{post.readTime}</span>
+          <span className="post-detail-readtime">{post.readTime}</span>
         </div>
 
         <div className="post-detail-rule" />
 
         <p className="post-detail-excerpt">{post.excerpt}</p>
-
-        <div className="post-detail-note">
-          <Tag className="ui-icon" size={16} strokeWidth={2} aria-hidden="true" />
-          <span>{post.category}</span>
-          <Clock className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-          <span className="post-date-text">{post.readTime}</span>
-        </div>
       </article>
     </main>
   )
