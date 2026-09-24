@@ -1,6 +1,6 @@
 :root {
   --font-sans: "Google Sans", "Google Sans Text", Arial, sans-serif;
-  --font-secondary: "Sriracha", cursive;
+  --font-secondary: "Patrick Hand", cursive;
   font-family: var(--font-sans);
   color-scheme: light;
   font-synthesis: none;
@@ -569,7 +569,7 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 
-/* Secondary typeface: Sriracha Regular. */
+/* Secondary typeface: Patrick Hand Regular. */
 .site-chip,
 .back-link,
 .post-category,
@@ -674,8 +674,8 @@ button,
 }
 
 
-.sriracha-regular {
-  font-family: "Sriracha", cursive;
+.patrick-hand-regular {
+  font-family: "Patrick Hand", cursive;
   font-weight: 400;
   font-style: normal;
 }
