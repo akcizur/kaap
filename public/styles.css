@@ -104,9 +104,8 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 .view-switcher {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 1px;
   padding: 3px;
   border-radius: 10px;
   background: var(--surface-strong);
@@ -118,19 +117,28 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 .mode-button {
-  min-width: 30px;
-  padding: 4px 8px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 8px;
-  background: transparent;
-  color: var(--text-soft);
+  background: var(--accent);
+  color: var(--accent-contrast);
   font-size: 12px;
   font-weight: 500;
-  line-height: 1.2;
-  transition: background-color .15s ease, color .15s ease;
+  line-height: 1;
+  transition: background-color .15s ease, color .15s ease, transform .15s ease;
 }
 
-.mode-button:hover { color: var(--text); }
-.mode-button.is-active { background: var(--accent); color: var(--accent-contrast); }
+.mode-button:hover {
+  transform: translateY(-1px);
+}
+
+.mode-button:active {
+  transform: translateY(0);
+}
 
 .icon-button {
   width: 32px;
@@ -243,7 +251,6 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   .main-content { padding-top: 36px; }
   .header-inner, .footer-inner { padding-left: 16px; padding-right: 16px; }
   .main-content { padding-left: 16px; padding-right: 16px; }
-  .view-switcher { display: none; }
   .newsletter { padding: 28px 20px; }
   .subscribe-form { flex-direction: column; }
   .subscribe-button { width: 100%; }
