@@ -1,22 +1,27 @@
-# Dimple — GitHub Pages
+# Dimple
 
-Vite + React app prepared for GitHub Pages deployment.
+A small Vite + React publishing interface, prepared for GitHub Pages.
 
-## Local development
+## Development
 
-\`npm install\`
-\`npm run dev\`
+```bash
+pnpm install
+pnpm dev
+```
 
 ## Production build
 
-\`npm run build\`
-\`npm run preview\`
+```bash
+pnpm build
+pnpm preview
+```
 
 ## GitHub Pages
 
-The repository is configured to deploy automatically from \`main\` using GitHub Actions.
+The workflow in `.github/workflows/deploy-pages.yml` builds the project and deploys `dist/` to GitHub Pages whenever `main` changes.
 
-Live site:
-https://akcizur.github.io/kaap/
+For this repository the production URL is:
 
-The Vite base path is derived from \`GITHUB_REPOSITORY\`, so assets resolve correctly under \`/kaap/\`.
+`https://akcizur.github.io/kaap/`
+
+The Vite base path is derived automatically from `GITHUB_REPOSITORY`, so the same project can also be used as another GitHub repository site.
