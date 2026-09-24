@@ -760,9 +760,9 @@ button,
 .post-detail-meta .post-date-text,
 .post-detail-note .post-date-text {
   font-family: "Patrick Hand", cursive !important;
-  font-size: x-small !important;
+  font-size: 9px !important;
   font-weight: 400;
-  line-height: 1.2;
+  line-height: 1;
   letter-spacing: .01em;
 }
 
