@@ -96,7 +96,7 @@ export default function App() {
         <div className="header-inner">
           <span className="brand">Dimple</span>
 
-          <nav className="header-actions" aria-label="Primary">
+          <nav className="header-actions" aria-label="Site controls and links">
             <div className="view-switcher">
               <ModeButton
                 mode={viewMode}
