@@ -608,3 +608,68 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   letter-spacing: .01em;
   line-height: 1;
 }
+
+
+/* All buttons are circular icon buttons. */
+button,
+.nav-button,
+.setting-button,
+.done-button,
+.subscribe-button,
+.modal-close,
+.icon-button,
+.search-clear {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.nav-button:hover,
+.nav-button:focus-visible,
+.nav-button:active {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  gap: 0;
+}
+
+.nav-button > span,
+.setting-button > span,
+.done-button > span {
+  display: none;
+}
+
+.nav-button:hover > span,
+.nav-button:focus-visible > span {
+  max-width: 0;
+  opacity: 0;
+}
+
+.setting-check {
+  display: none;
+}
+
+.subscribe-button {
+  flex: 0 0 36px;
+  font-size: 0;
+}
+
+@media (max-width: 640px) {
+  .nav-button,
+  .nav-button:hover,
+  .nav-button:focus-visible,
+  .nav-button:active {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+}
