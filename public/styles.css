@@ -957,30 +957,45 @@ article:focus-visible {
   }
 }
 
-
-/* Contextual navbar subbar. */
+/* Contextual navbar subbar — a lighter extension of the main navbar. */
 .nav-context {
   position: relative;
 }
 
 .nav-subbar {
   overflow: hidden;
-  max-height: 120px;
-  opacity: 1;
+  max-height: 72px;
   border-top: 1px solid var(--border-soft);
-  background: var(--header-bg);
-  transition: max-height .22s ease, opacity .16s ease, border-color .2s ease;
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
+  animation: nav-subbar-in .18s ease-out;
+}
+
+[data-theme='dark'] .nav-subbar {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+
+@keyframes nav-subbar-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .nav-subbar-inner {
   width: 100%;
   max-width: 768px;
-  min-height: 44px;
+  min-height: 40px;
   margin: 0 auto;
-  padding: 7px 24px;
+  padding: 4px 24px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -991,7 +1006,9 @@ article:focus-visible {
 
 .subbar-label {
   flex: 0 0 auto;
+  margin-right: 2px;
   color: var(--text-faint);
+  font-family: var(--font-sans);
   font-size: 9px;
   font-weight: 700;
   letter-spacing: .08em;
@@ -1006,17 +1023,16 @@ article:focus-visible {
 }
 
 .subbar-action,
-.subbar-more,
-.subbar-search-clear {
+.subbar-more {
   flex: 0 0 auto;
-  min-height: 30px;
+  min-height: 28px;
   padding: 0 10px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   color: var(--text-soft);
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -1028,38 +1044,50 @@ article:focus-visible {
 .subbar-more:hover,
 .subbar-more:focus-visible {
   background: var(--surface-strong);
-  border-color: var(--border-strong);
+  border-color: var(--border);
   color: var(--text);
 }
 
 .subbar-action.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--surface-strong);
+  border-color: var(--border-strong);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--border-soft);
 }
 
 .subbar-divider {
   width: 1px;
-  height: 20px;
+  height: 18px;
   flex: 0 0 auto;
-  background: var(--border-soft);
+  margin: 0 2px;
+  background: var(--border);
 }
 
 .subbar-more {
   margin-left: auto;
+  border-color: var(--border);
+}
+
+.subbar-more:hover,
+.subbar-more:focus-visible {
+  border-color: var(--border-strong);
 }
 
 .subbar-search {
   width: 100%;
-  min-height: 34px;
+  min-height: 32px;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 11px;
+  gap: 8px;
+  padding: 0 10px;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: var(--surface);
+  background: var(--surface-dark);
   color: var(--text-soft);
+}
+
+.subbar-search:focus-within {
+  border-color: var(--text-faint);
 }
 
 .subbar-search-input {
@@ -1082,6 +1110,9 @@ article:focus-visible {
   min-width: 24px;
   height: 24px;
   min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -1093,33 +1124,53 @@ article:focus-visible {
 .subbar-search-clear:hover,
 .subbar-search-clear:focus-visible {
   color: var(--text);
+  background: var(--surface-strong);
 }
 
 .subbar-link {
-  min-height: 30px;
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0 2px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   color: var(--text);
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color .15s ease, border-color .15s ease;
+}
+
+.subbar-link:hover,
+.subbar-link:focus-visible {
+  background: var(--surface-strong);
+  border-color: var(--border);
 }
 
 .subbar-link strong {
-  font-size: 12px;
+  font-family: var(--font-sans);
+  font-size: 11px;
   font-weight: 700;
 }
 
 .subbar-link span {
   color: var(--text-soft);
-  font-size: 11px;
+  font-family: var(--font-sans);
+  font-size: 10px;
 }
 
 @media (max-width: 640px) {
+  .nav-subbar {
+    max-height: 64px;
+  }
+
   .nav-subbar-inner {
-    min-height: 42px;
-    padding: 6px 16px;
+    min-height: 38px;
+    padding: 4px 16px;
+  }
+
+  .subbar-label {
+    display: none;
   }
 
   .subbar-more {
@@ -1128,9 +1179,16 @@ article:focus-visible {
 
   .subbar-link {
     gap: 6px;
+    padding: 0 6px;
   }
 
   .subbar-link span {
     display: none;
+  }
+
+  .subbar-action,
+  .subbar-more {
+    min-height: 28px;
+    padding: 0 9px;
   }
 }
