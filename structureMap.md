@@ -55,10 +55,9 @@ Definuje:
 |---|---|
 | index.html | HTML shell + metadata |
 | main.tsx | React bootstrap |
-| App.tsx | orchestrace + state + composition |
+| App.tsx | orchestrace + state + composition + navbar panels |
 | PostCard.tsx | post presentation |
 | PostPage.tsx | detail presentation |
-| App.tsx | navbar settings/search UI + orchestration |
 | ModeButton.tsx | reusable mode control |
 | viewModes.ts | mode configuration |
 | posts.ts | content data |
@@ -80,7 +79,7 @@ Definuje:
        ├── src/config/viewModes.ts
        ├── src/hooks/usePreferences.ts
        ├── components/PostCard.tsx
-       ├── components/PostPage.tsx
+       └── components/PostPage.tsx
 
 CSS flow:
 
