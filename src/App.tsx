@@ -10,7 +10,7 @@ import {
 import { PostPage } from './components/PostPage'
 import { PostCard } from './components/PostCard'
 import { posts } from './data/posts'
-import { VIEW_MODES } from './config/viewModes'
+import { VIEW_MODE_ORDER, VIEW_MODES } from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
 
 export default function App() {
@@ -79,9 +79,8 @@ export default function App() {
   }
 
   function handleLayoutToggle() {
-    const modes = Object.keys(VIEW_MODES) as Array<keyof typeof VIEW_MODES>
-    const index = modes.indexOf(viewMode)
-    const nextMode = modes[(index + 1) % modes.length]
+    const index = VIEW_MODE_ORDER.indexOf(viewMode)
+    const nextMode = VIEW_MODE_ORDER[(index + 1) % VIEW_MODE_ORDER.length]
     updatePreference('viewMode', nextMode)
   }
 
