@@ -695,10 +695,6 @@ article:focus-visible {
   font-size: 13px;
 }
 
-.scale-100 {
-  zoom: 1;
-}
-
 .ui-icon {
   display: block;
   flex: 0 0 auto;
