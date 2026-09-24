@@ -258,7 +258,7 @@ Pravidlo:
     searchOpen === true
        → settingsOpen === false
 
-Obsah se neřídí hoverem. Aktivní panel se vykresluje přímo uvnitř sticky headeru.
+Obsah se neřídí hoverem. Aktivní panel se vykresluje přímo uvnitř sticky headeru, ale je absolutně pozicovaný mimo běžný layout flow.
 
 ### Settings panel
 
@@ -286,6 +286,8 @@ Obsah se neřídí hoverem. Aktivní panel se vykresluje přímo uvnitř sticky 
       └── github
 
 Neexistuje samostatný subnavbar ani contextual nav state.
+
+Navbar zůstává vždy vysoký 56px. Otevřený panel překrývá obsah stránky pod navbarovou linií a nemění výšku headeru.
 
 ---
 
