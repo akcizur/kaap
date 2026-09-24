@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   Globe2,
-  LayoutGrid,
   Mail,
   Moon,
   Search,
