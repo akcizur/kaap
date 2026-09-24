@@ -294,7 +294,7 @@ export default function App() {
                   required
                   aria-label="Email address"
                 />
-                <button type="submit" className="subscribe-button">Subscribe</button>
+                <button type="submit" className="subscribe-button" title="Subscribe" aria-label="Subscribe"><Mail className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" /></button>
               </form>
             </>
           )}
