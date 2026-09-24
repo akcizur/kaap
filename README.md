@@ -62,11 +62,11 @@ Aktuální stav dokumentace odpovídá revizi single-navbar architektury z 24. z
 
 Poslední relevantní změny:
 
-- single expandable navbar,
-- Settings a Search přímo uvnitř headeru,
-- Web / Mail / GitHub přesunuty do footeru,
-- odstraněn samostatný settings modal,
-- odstraněn contextual navigation layer.
+- Layout / Theme / Search jsou přímé navbar controls,
+- Web / Mail / GitHub jsou ve footeru,
+- odstraněn Settings menu,
+- odstraněn subnavbar,
+- odstraněny Language a Scale controls.
 
 Při dalších architektonických změnách je nutné README znovu zkontrolovat.
 
@@ -208,9 +208,6 @@ Vlastní zejména:
 
 - email,
 - subscribed,
-- language,
-- scale,
-- settingsOpen,
 - searchOpen,
 - searchQuery,
 - selectedPostId.
@@ -366,33 +363,37 @@ Není zde:
 
 ---
 
-## 13. Settings v navbaru
+## 13. Main navbar controls
 
-Settings už není samostatný modal.
+Navbar je bez Settings menu a bez subnavbaru.
 
-Po kliknutí na ikonu Settings se přímo ve sticky navbaru otevře inline panel, který obsahuje:
+Hlavní řádek obsahuje:
 
-### View Mode
+- Layout button,
+- Theme button,
+- Search button.
 
-List / Grid / Magazine / Compact
+### Layout
 
-### Language
+Jeden kruhový button. Kliknutím se cyklicky mění:
 
-EN / CZ
+List → Grid → Magazine → Compact → List
+
+Button zobrazuje pouze ikonu aktuálního layoutu.
 
 ### Theme
 
-Light / Dark
+Jeden kruhový button. Kliknutím se přepíná:
 
-### UI Scale
+Light ↔ Dark
 
-90 / 100 / 110
+Button zobrazuje pouze aktuální theme ikonu.
 
-Panel se zavírá kliknutím na Settings, otevřením Search nebo klávesou Escape.
+### Search
 
-Search a Settings jsou navzájem výhradní, takže navbar má vždy nejvýše jeden otevřený panel.
+Jeden kruhový button. Kliknutím se otevře search field jako překryvný panel pod 56px navbar.
 
----
+Lang a Scale controls byly odstraněny.
 
 ## 14. Preferences
 
@@ -519,24 +520,20 @@ Design je proto úzký editorial column, ne široký dashboard.
 
 ---
 
-## 18. Single navbar
-
-Hlavička má jednu navigační vrstvu.
+## 18. Navbar a footer
 
 ### Main navbar
 
-- Dimple brand,
-- Settings,
+- Dimple,
+- Layout,
+- Theme,
 - Search.
 
-### Expandable navbar panels
+### Search overlay
 
-Po aktivaci se přímo uvnitř headeru otevře:
+Search se otevírá pod navbarovou linií jako překryvný panel.
 
-- Settings panel s View / Theme / Language / Scale,
-- nebo Search panel s inputem.
-
-Neexistuje samostatný subnavbar ani contextual navigation layer.
+Panel je mimo běžný layout flow, takže otevření search neposouvá obsah stránky.
 
 ### Footer links
 
@@ -545,9 +542,6 @@ Externí odkazy jsou ve footeru:
 - Website,
 - Mail,
 - GitHub.
-
----
-
 ## 19. Search
 
 Search je čistě klientský.
@@ -641,7 +635,6 @@ Aktuálně jsou použity:
 ### Co ještě není kompletní
 
 - skutečné i18n,
-- persistence language/scale,
 - full article semantics.
 
 ---
