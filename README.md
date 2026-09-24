@@ -87,7 +87,7 @@ Tato dokumentace popisuje stav k tomuto revision. Při změnách architektury je
 
 - lucide-react ^1.47.0
 - @fontsource/google-sans ^5.3.1
-- @fontsource/museomoderno ^5.3.0
+- @fontsource/fragment-mono ^5.3.0
 
 ### Development
 
@@ -212,30 +212,26 @@ Vlastní zejména:
 - settingsOpen,
 - searchOpen,
 - searchQuery,
-- hoveredNavItem,
 - selectedPostId.
 
 ### Derived state
 
 - selectedPost,
 - filteredPosts,
-- subbarItem,
-- showSubbar.
 
 ### Effects
 
 - synchronizace document lang,
 - popstate listener,
-- Escape listener pro settings,
+- Escape listener pro otevřené navbar panely,
 - focus search inputu.
 
 ### Event behavior
 
-- otevření search,
-- otevření settings,
+- otevření search panelu,
+- otevření settings panelu,
 - subscribe,
-- změna preference,
-- práce s nav hover/focus.
+- změna preference.
 
 ---
 
@@ -369,9 +365,11 @@ Není zde:
 
 ---
 
-## 13. SettingsModal.tsx
+## 13. Settings v navbaru
 
-Settings modal ovládá:
+Settings už není samostatný modal.
+
+Po kliknutí na ikonu Settings se přímo ve sticky navbaru otevře inline panel, který obsahuje:
 
 ### View Mode
 
@@ -389,14 +387,9 @@ Light / Dark
 
 90 / 100 / 110
 
-Modal se zavírá přes:
+Panel se zavírá kliknutím na Settings, otevřením Search nebo klávesou Escape.
 
-- X,
-- klik na backdrop,
-- Escape,
-- Done.
-
-Aktivní volba používá is-active + check ikonku.
+Search a Settings jsou navzájem výhradní, takže navbar má vždy nejvýše jeden otevřený panel.
 
 ---
 
@@ -503,8 +496,8 @@ Používají jej:
 - header-inner,
 - main-content,
 - footer-inner,
-- nav-subbar-inner,
-- search-row.
+- nav-panel-inner,
+- nav-panel-inner.
 
 Design je proto úzký editorial column, ne široký dashboard.
 
@@ -526,42 +519,32 @@ Design je proto úzký editorial column, ne široký dashboard.
 
 ---
 
-## 18. Contextual navbar
+## 18. Single navbar
 
-Aktuální hlavička má:
+Hlavička má jednu navigační vrstvu.
 
 ### Main navbar
 
 - Dimple brand,
-- settings,
-- search,
-- GitHub,
-- website,
-- mail.
+- Settings,
+- Search.
 
-### Contextual subbar
+### Expandable navbar panels
 
-Obsah se mění podle hoveredNavItem.
+Po aktivaci se přímo uvnitř headeru otevře:
 
-Možné položky:
+- Settings panel s View / Theme / Language / Scale,
+- nebo Search panel s inputem.
 
-- settings,
-- search,
-- github,
-- website,
-- mail.
+Neexistuje samostatný contextual subbar.
 
-Settings subbar rychle přepíná:
+### Footer links
 
-- view mode,
-- theme,
-- language,
-- scale,
-- More.
+Externí odkazy jsou ve footeru:
 
-Search subbar obsahuje search input.
-
-External link subbary zobrazují kontext a link.
+- Website,
+- Mail,
+- GitHub.
 
 ---
 
@@ -659,10 +642,8 @@ Aktuálně jsou použity:
 
 ### Co ještě není kompletní
 
-- focus trap v modalu,
-- automatický focus do modalu,
-- návrat focusu na původní trigger,
 - skutečné i18n,
+- persistence language/scale,
 - full article semantics.
 
 ---
@@ -729,8 +710,8 @@ Header actions mohou horizontálně scrollovat.
 - menší header,
 - menší controls,
 - menší main padding,
-- zjednodušený subbar,
-- helper texty mohou zmizet,
+- navbar panely zůstávají v content disciplíně,
+- settings options mohou horizontálně scrollovat,
 - newsletter se zmenší.
 
 ---
@@ -904,7 +885,7 @@ Bez vědomého redesignu zachovej:
 - monochromatickou paletu,
 - Google Sans + Fragment Mono,
 - 56px header,
-- contextual subbar,
+- expandable navbar panels,
 - malé ikony,
 - tenké borders,
 - minimum shadows,
