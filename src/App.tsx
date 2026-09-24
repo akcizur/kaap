@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent 
 import {
   Globe2,
   Mail,
+  Moon,
   Search,
   Settings2,
+  Sun,
   X,
 } from 'lucide-react'
 import { PostPage } from './components/PostPage'
@@ -166,17 +168,23 @@ export default function App() {
               <div className="nav-setting-row">
                 <span className="nav-setting-label">View</span>
                 <div className="nav-setting-options" role="group" aria-label="View mode">
-                  {VIEW_MODE_ORDER.map(mode => (
-                    <button
-                      key={mode}
-                      type="button"
-                      className={`nav-setting-option${viewMode === mode ? ' is-active' : ''}`}
-                      onClick={() => updatePreference('viewMode', mode)}
-                      aria-pressed={viewMode === mode}
-                    >
-                      {VIEW_MODES[mode].label}
-                    </button>
-                  ))}
+                  {VIEW_MODE_ORDER.map(mode => {
+                    const ModeIcon = VIEW_MODES[mode].icon
+
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        className={`nav-setting-option${viewMode === mode ? ' is-active' : ''}`}
+                        onClick={() => updatePreference('viewMode', mode)}
+                        title={VIEW_MODES[mode].label}
+                        aria-label={`View: ${VIEW_MODES[mode].label}`}
+                        aria-pressed={viewMode === mode}
+                      >
+                        <ModeIcon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -189,9 +197,15 @@ export default function App() {
                       type="button"
                       className={`nav-setting-option${theme === option ? ' is-active' : ''}`}
                       onClick={() => updatePreference('theme', option)}
+                      title={option === 'light' ? 'Light' : 'Dark'}
+                      aria-label={`Theme: ${option === 'light' ? 'Light' : 'Dark'}`}
                       aria-pressed={theme === option}
                     >
-                      {option === 'light' ? 'Light' : 'Dark'}
+                      {option === 'light' ? (
+                        <Sun className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                      ) : (
+                        <Moon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -206,6 +220,8 @@ export default function App() {
                       type="button"
                       className={`nav-setting-option${language === option ? ' is-active' : ''}`}
                       onClick={() => setLanguage(option)}
+                      title={`Language: ${option}`}
+                      aria-label={`Language: ${option}`}
                       aria-pressed={language === option}
                     >
                       {option}
@@ -223,9 +239,11 @@ export default function App() {
                       type="button"
                       className={`nav-setting-option${scale === option ? ' is-active' : ''}`}
                       onClick={() => setScale(option)}
+                      title={`UI scale: ${option}%`}
+                      aria-label={`UI scale: ${option}%`}
                       aria-pressed={scale === option}
                     >
-                      {option}%
+                      {option}
                     </button>
                   ))}
                 </div>
