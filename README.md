@@ -87,7 +87,7 @@ Tato dokumentace popisuje stav k tomuto revision. Při změnách architektury je
 
 - lucide-react ^1.47.0
 - @fontsource/google-sans ^5.3.1
-- @fontsource/patrick-hand ^5.3.0
+- @fontsource/museomoderno ^5.3.0
 
 ### Development
 
