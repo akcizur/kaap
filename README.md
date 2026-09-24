@@ -212,6 +212,10 @@ Vlastní zejména:
 - searchQuery,
 - selectedPostId.
 
+Preferences:
+- theme,
+- viewMode.
+
 ### Derived state
 
 - selectedPost,
@@ -219,17 +223,16 @@ Vlastní zejména:
 
 ### Effects
 
-- synchronizace document lang,
 - popstate listener,
-- Escape listener pro otevřené navbar panely,
+- Escape listener pro search overlay,
 - focus search inputu.
 
 ### Event behavior
 
-- otevření search panelu,
-- otevření settings panelu,
-- subscribe,
-- změna preference.
+- přepnutí Layout,
+- přepnutí Theme,
+- otevření Search overlay,
+- subscribe.
 
 ---
 
@@ -401,7 +404,7 @@ Hook:
 
 src/hooks/usePreferences.ts
 
-Aktuálně persistuje pouze:
+Aktuálně persistuje:
 
 - theme,
 - viewMode.
@@ -421,11 +424,6 @@ View mode initialization:
 
 1. validní localStorage value,
 2. list fallback.
-
-Language a scale se dnes nepersistují.
-
----
-
 ## 15. Theme
 
 Theme je řízena atributem data-theme.
@@ -669,20 +667,7 @@ Nová třída musí být dostatečně specifická, aby náhodou nezasahovala jin
 
 ## 24. UI scale
 
-Aplikace podporuje:
-
-- 90%,
-- 100%,
-- 110%.
-
-Aktuální implementace používá CSS zoom na celém .app subtree.
-
-Nové komponenty musí fungovat při všech třech hodnotách.
-
-Scale se dnes nepersistuje.
-
----
-
+UI scale control byl odstraněn z aplikace. Rozložení používá standardní 100% browser scale.
 ## 25. Responsive
 
 Breakpoints:
@@ -699,8 +684,7 @@ Header actions mohou horizontálně scrollovat.
 - menší header,
 - menší controls,
 - menší main padding,
-- navbar panely zůstávají v content disciplíně,
-- settings options mohou horizontálně scrollovat,
+- search overlay zůstává v content disciplíně,
 - newsletter se zmenší.
 
 ---
@@ -817,7 +801,7 @@ Proto:
 | nový view mode | viewModes.ts + PostCard.tsx + CSS |
 | theme token | public/styles.css |
 | navbar action | App.tsx |
-| settings option | settings/search panel v App.tsx + App.tsx |
+| layout change | App.tsx + viewModes.ts |
 | persistent preference | usePreferences.ts |
 | detail postu | PostPage.tsx |
 | build/base path | vite.config.ts |
@@ -874,7 +858,7 @@ Bez vědomého redesignu zachovej:
 - monochromatickou paletu,
 - Google Sans + Fragment Mono,
 - 56px header,
-- expandable navbar panels,
+- direct navbar controls,
 - malé ikony,
 - tenké borders,
 - minimum shadows,
@@ -934,7 +918,9 @@ Důležité: tyto věci nejsou součástí současné implementace.
     [ ] search
     [ ] ?post=N
     [ ] Back to posts
-    [ ] Settings
+    [ ] Layout
+    [ ] Theme
+    [ ] Search
     [ ] Escape
     [ ] keyboard focus
     [ ] 90%
