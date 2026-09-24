@@ -185,7 +185,7 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   border-bottom: 1px solid var(--border-soft);
 }
 
-.posts-heading h3 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.posts-heading h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
 .posts-heading span { color: var(--text-faint); font-family: var(--font-marker); font-size: 13px; font-weight: 400; font-style: normal; letter-spacing: .04em; }
 
 .posts { width: 100%; }
