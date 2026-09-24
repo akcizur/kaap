@@ -216,24 +216,22 @@ export default function App() {
 
                 <button
                   type="button"
-                  className="nav-setting-option nav-setting-option--value"
+                  className="nav-setting-option"
                   onClick={cycleLanguage}
                   title={`Language: ${language}`}
                   aria-label={`Change language. Current: ${language}`}
                 >
                   <Languages className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                  <span>{language}</span>
                 </button>
 
                 <button
                   type="button"
-                  className="nav-setting-option nav-setting-option--value"
+                  className="nav-setting-option"
                   onClick={cycleScale}
                   title={`UI scale: ${scale}%`}
                   aria-label={`Change UI scale. Current: ${scale}%`}
                 >
                   <Scaling className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                  <span>{scale}</span>
                 </button>
               </nav>
             </div>
