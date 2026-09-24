@@ -1,6 +1,7 @@
 :root {
   --font-sans: "Google Sans", "Google Sans Text", Arial, sans-serif;
   --font-marker: "Caveat Brush", cursive;
+  --font-pixel: "Press Start 2P", monospace;
   font-family: var(--font-sans);
   color-scheme: light;
   font-synthesis: none;
@@ -566,4 +567,44 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   padding-left: 0;
   padding-right: 0;
   gap: 0;
+}
+
+
+/* Third typeface: old-school PC pixel metadata. */
+.site-chip,
+.back-link,
+.post-category,
+.post-kicker,
+.post-detail-kicker,
+.post-detail-note {
+  font-family: var(--font-pixel);
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: .02em;
+}
+
+.site-chip {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.back-link {
+  font-size: 9px;
+}
+
+.post-category,
+.post-kicker,
+.post-detail-kicker,
+.post-detail-note {
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.post-kicker-date,
+.post-detail-kicker .post-date-text,
+.post-detail-note .post-date-text {
+  font-family: var(--font-marker) !important;
+  font-size: 17px;
+  letter-spacing: .01em;
+  line-height: 1;
 }
