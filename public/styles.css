@@ -593,9 +593,7 @@ article:focus-visible {
   color: var(--accent-contrast);
 }
 
-.subscribe-button:hover,
-.done-button:hover,
-.modal-close:hover {
+.subscribe-button:hover {
   opacity: .8;
 }
 
@@ -697,16 +695,8 @@ article:focus-visible {
   font-size: 13px;
 }
 
-.scale-90 {
-  zoom: .9;
-}
-
 .scale-100 {
   zoom: 1;
-}
-
-.scale-110 {
-  zoom: 1.1;
 }
 
 .ui-icon {
@@ -886,22 +876,6 @@ article:focus-visible {
   .nav-panel-inner {
     padding-left: 16px;
     padding-right: 16px;
-  }
-
-  .nav-panel--settings .nav-panel-inner {
-    justify-content: flex-end;
-  }
-
-  .nav-settings-controls {
-    gap: 5px;
-  }
-
-  .nav-setting-option {
-    flex-basis: 30px;
-    width: 30px;
-    min-width: 30px;
-    height: 30px;
-    min-height: 30px;
   }
 
   .post-page {
