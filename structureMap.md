@@ -55,7 +55,7 @@ Definuje:
 |---|---|
 | index.html | HTML shell + metadata |
 | main.tsx | React bootstrap |
-| App.tsx | orchestrace + state + composition + navbar panels |
+| App.tsx | orchestrace + state + direct navbar controls |
 | PostCard.tsx | post presentation |
 | PostPage.tsx | detail presentation |
 | ModeButton.tsx | reusable mode control |
@@ -103,7 +103,7 @@ App.tsx vlastní:
     subscribed
     language
     scale
-    settingsOpen
+    searchOpen
     searchOpen
     searchQuery
     selectedPostId
@@ -311,7 +311,7 @@ Při přidání nového view mode:
 1. ViewMode union,
 2. VIEW_MODE_ORDER,
 3. VIEW_MODES,
-4. navbar settings option,
+4. navbar control,
 5. PostCard branch,
 6. CSS.
 
@@ -393,46 +393,21 @@ Komponenty nemají samostatné light/dark stylesheety.
 
 ---
 
-## 18. UI scale graph
+## 18. Fixed navbar invariant
 
-    scale state
-       ↓
-    class scale-90 / scale-100 / scale-110
-       ↓
-    CSS zoom
-       ↓
-    celý .app subtree
+Navbar má pevnou výšku 56px.
 
-Scale není součást theme systému.
+Search overlay je absolutně pozicovaný pod navbarem a neovlivňuje layout flow.
 
----
+## 19. Footer links
 
-## 19. Navbar settings flow
+Externí odkazy jsou pouze ve footeru:
 
-    settings trigger
-          ↓
-    settingsOpen=true
-          ↓
-    nav-panel--settings
-       ├── theme
-       ├── view mode
-       ├── language
-       └── scale
-          ↓
-       callbacks
-          ↓
-       App.tsx
+    website
+    mail
+    github
 
-Close:
-
-    Settings / Search / Escape
-                 ↓
-          settingsOpen=false
-
-Neexistuje modal backdrop ani samostatná settings komponenta.
-
----
-
+Nejsou součástí hlavní navbarové interakce.
 ## 20. Newsletter flow
 
     email state
@@ -744,7 +719,7 @@ Při významném růstu je možné použít:
     ├── components/
     │   ├── navigation/
     │   ├── posts/
-    │   ├── settings/
+    │   ├── navigation/
     │   └── newsletter/
     ├── config/
     ├── content/
