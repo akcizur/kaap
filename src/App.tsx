@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
-  Github,
+  GitFork,
   Globe2,
   Languages,
   Mail,
@@ -163,7 +163,7 @@ export default function App() {
               title="GitHub"
               aria-label="Open GitHub repository"
             >
-              <Github className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+              <GitFork className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
               <span>GitHub</span>
             </a>
 
