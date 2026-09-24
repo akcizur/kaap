@@ -15,6 +15,13 @@ type ViewModeConfig = {
   articleClassName: string
 }
 
+export const VIEW_MODE_ORDER: ViewMode[] = [
+  'list',
+  'grid',
+  'magazine',
+  'compact',
+]
+
 export const VIEW_MODES: Record<ViewMode, ViewModeConfig> = {
   list: {
     icon: List,
