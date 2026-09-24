@@ -103,98 +103,102 @@ export default function App() {
         <div className="header-inner">
           <span className="brand">Dimple</span>
 
-          <nav className="header-actions" aria-label="Site controls and links">\n            <div className="nav-group nav-controls">
-            <div className="view-switcher">
-              <ModeButton
-                mode={viewMode}
-                icon={currentMode.icon}
-                currentLabel={currentMode.label}
-                nextLabel={VIEW_MODES[nextViewMode].label}
-                onClick={handleViewModeChange}
-              />
+          <nav className="header-actions" aria-label="Site controls and links">
+            <div className="nav-group nav-controls">
+              <div className="view-switcher">
+                <ModeButton
+                  mode={viewMode}
+                  icon={currentMode.icon}
+                  currentLabel={currentMode.label}
+                  nextLabel={VIEW_MODES[nextViewMode].label}
+                  onClick={handleViewModeChange}
+                />
+              </div>
+
+              <button
+                className="nav-button"
+                onClick={() => setLanguage(current => current === 'EN' ? 'CZ' : 'EN')}
+                title={`Language: ${language}. Switch to ${language === 'EN' ? 'CZ' : 'EN'}`}
+                aria-label={`Language: ${language}. Switch language`}
+              >
+                <Languages className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>{language}</span>
+              </button>
+
+              <button
+                className="nav-button"
+                onClick={() => updatePreference('theme', isDark ? 'light' : 'dark')}
+                title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+                aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+              >
+                <ThemeIcon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>{isDark ? 'Light' : 'Dark'}</span>
+              </button>
+
+              <button
+                className="nav-button"
+                onClick={handleScaleChange}
+                title={`UI scale: ${scale}%. Click for ${nextScale}%`}
+                aria-label={`UI scale ${scale} percent. Click for ${nextScale} percent`}
+              >
+                <Scaling className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>{scale}%</span>
+              </button>
+
+              <button
+                className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`}
+                onClick={() => {
+                  setSearchOpen(open => !open)
+                  if (searchOpen) setSearchQuery('')
+                }}
+                title={searchOpen ? 'Close search' : 'Search'}
+                aria-label={searchOpen ? 'Close search' : 'Search'}
+                aria-expanded={searchOpen}
+              >
+                {searchOpen ? (
+                  <X className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                ) : (
+                  <Search className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                )}
+                <span>{searchOpen ? 'Close' : 'Search'}</span>
+              </button>
             </div>
 
-            <button
-              className="nav-button"
-              onClick={() => setLanguage(current => current === 'EN' ? 'CZ' : 'EN')}
-              title={`Language: ${language}. Switch to ${language === 'EN' ? 'CZ' : 'EN'}`}
-              aria-label={`Language: ${language}. Switch language`}
-            >
-              <Languages className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              <span>{language}</span>
-            </button>
+            <div className="nav-group nav-links">
+              <a
+                className="nav-button nav-link"
+                href="https://github.com/akcizur/kaap"
+                target="_blank"
+                rel="noreferrer"
+                title="GitHub"
+                aria-label="Open GitHub repository"
+              >
+                <GithubMark />
+                <span>GitHub</span>
+              </a>
 
-            <button
-              className="nav-button"
-              onClick={() => updatePreference('theme', isDark ? 'light' : 'dark')}
-              title={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-              aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
-            >
-              <ThemeIcon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              <span>{isDark ? 'Light' : 'Dark'}</span>
-            </button>
+              <a
+                className="nav-button nav-link"
+                href="https://dimple.blog"
+                target="_blank"
+                rel="noreferrer"
+                title="Website"
+                aria-label="Open website"
+              >
+                <Globe2 className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>Website</span>
+              </a>
 
-            <button
-              className="nav-button"
-              onClick={handleScaleChange}
-              title={`UI scale: ${scale}%. Click for ${nextScale}%`}
-              aria-label={`UI scale ${scale} percent. Click for ${nextScale} percent`}
-            >
-              <Scaling className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              <span>{scale}%</span>
-            </button>
-
-            <button
-              className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`}
-              onClick={() => {
-                setSearchOpen(open => !open)
-                if (searchOpen) setSearchQuery('')
-              }}
-              title={searchOpen ? 'Close search' : 'Search'}
-              aria-label={searchOpen ? 'Close search' : 'Search'}
-              aria-expanded={searchOpen}
-            >
-              {searchOpen ? (
-                <X className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              ) : (
-                <Search className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              )}
-              <span>{searchOpen ? 'Close' : 'Search'}</span>
-            </button>
-
-            <a
-              className="nav-button nav-link"
-              href="https://github.com/akcizur/kaap"
-              target="_blank"
-              rel="noreferrer"
-              title="GitHub"
-              aria-label="Open GitHub repository"
-            >
-              <GithubMark />
-              <span>GitHub</span>
-            </a>
-
-            <a
-              className="nav-button nav-link"
-              href="https://dimple.blog"
-              target="_blank"
-              rel="noreferrer"
-              title="Website"
-              aria-label="Open website"
-            >
-              <Globe2 className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              <span>Website</span>
-            </a>
-
-            <a
-              className="nav-button nav-link"
-              href="mailto:hello@dimple.blog"
-              title="Mail"
-              aria-label="Send email"
-            >
-              <Mail className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              <span>Mail</span>
-            </a>
+              <a
+                className="nav-button nav-link"
+                href="mailto:hello@dimple.blog"
+                title="Mail"
+                aria-label="Send email"
+              >
+                <Mail className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+                <span>Mail</span>
+              </a>
+            </div>
           </nav>
         </div>
 
