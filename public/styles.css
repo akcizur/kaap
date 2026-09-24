@@ -125,12 +125,14 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 .nav-button {
+  width: 32px;
+  min-width: 32px;
   min-height: 32px;
-  padding: 0 11px;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 0;
   border-radius: 999px;
   background: transparent;
   color: var(--text-soft);
@@ -139,10 +141,21 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
-  transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+  overflow: hidden;
+  transition: width .2s ease, min-width .2s ease, padding .2s ease, gap .2s ease, background-color .15s ease, border-color .15s ease, color .15s ease, transform .15s ease;
+}
+
+.nav-button > span {
+  display: block;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
+  transition: max-width .2s ease, opacity .12s ease;
 }
 
 .nav-button:hover,
+.nav-button:focus-visible,
 .nav-button:focus-visible {
   background: var(--surface-strong);
   border-color: var(--border-strong);
@@ -159,8 +172,14 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   color: var(--text);
 }
 
+.nav-button:hover > span,
+.nav-button:focus-visible > span {
+  max-width: 90px;
+  opacity: 1;
+}
+
 .nav-mode-button .nav-mode-label {
-  display: none;
+  display: block;
 }
 
 .icon-button {
@@ -407,10 +426,12 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
   .header-inner { height: auto; min-height: 56px; gap: 10px; }
   .brand { flex-shrink: 0; }
   .header-actions { padding: 8px 0; justify-content: flex-start; }
-  .nav-button { padding: 0 9px; }
-  .nav-button span { display: none; }
-  .nav-button .ui-icon + span { display: none; }
-  .nav-mode-button .nav-mode-label { display: none; }
+  .nav-button { width: 32px; min-width: 32px; padding: 0; }
+  .nav-button:hover,
+  .nav-button:focus-visible { width: auto; padding: 0 9px; gap: 7px; }
+  .nav-button:hover > span,
+  .nav-button:focus-visible > span { max-width: 80px; opacity: 1; }
+  .nav-mode-button .nav-mode-label { display: block; }
   .search-row { padding: 4px 16px 10px; }
 }
 
