@@ -174,7 +174,6 @@ export default function App() {
                 aria-label="Open GitHub repository"
               >
                 <GithubMark />
-                <span>GitHub</span>
               </a>
 
               <a
@@ -186,7 +185,6 @@ export default function App() {
                 aria-label="Open website"
               >
                 <Globe2 className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-                <span>Website</span>
               </a>
 
               <a
@@ -196,7 +194,6 @@ export default function App() {
                 aria-label="Send email"
               >
                 <Mail className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-                <span>Mail</span>
               </a>
             </div>
           </nav>
