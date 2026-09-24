@@ -336,6 +336,9 @@ Pravidla:
 - žádný samostatný subnavbar,
 - žádný hover-driven navigation context,
 - nejvýše jeden otevřený panel,
+- hlavní navbar má pevnou výšku 56px,
+- panel je absolutně pozicovaný pod navbar,
+- otevření panelu nesmí zvětšit header ani posunout page content,
 - panel používá stejnou 768px content disciplínu jako header a main,
 - panel nesmí vytvářet horizontal overflow mimo vlastní scrollovací řádek.
 
