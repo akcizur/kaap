@@ -107,7 +107,7 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 .mode-button, .icon-button, .modal-close, .setting-button, .done-button, .subscribe-button, .nav-button {
-  border: 1px solid var(--border-strong);
+  border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
 }
