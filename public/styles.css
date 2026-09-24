@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Jacquard+24&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 
 :root {
   --font-sans: "Google Sans", "Google Sans Text", Arial, sans-serif;
-  --font-jacquard: "Jacquard 24", system-ui;
+  --font-marker: "Permanent Marker", system-ui;
   font-family: var(--font-sans);
   color-scheme: light;
   font-synthesis: none;
@@ -250,7 +250,7 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 
-.jacquard-24-regular {
+.permanent-marker-regular {
   font-family: "Jacquard 24", system-ui;
   font-weight: 400;
   font-style: normal;
