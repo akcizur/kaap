@@ -309,21 +309,28 @@ Settings a Search jsou vždy ovládány pouze kliknutím. Hover nemění obsah n
 
 Po aktivaci se obsah otevře přímo uvnitř headeru jako navbar panel.
 
-Settings panel obsahuje:
+Settings overlay obsahuje pouze čtyři kruhové icon buttons:
 
-- View,
+- View mode,
 - Theme,
 - Language,
-- Scale.
+- UI scale.
 
-Všechny jednotlivé volby používají jednotné kruhové toggle buttons:
+Každá funkce má právě jeden button. Button zobrazuje pouze jednu ikonu.
 
+Kliknutí přímo změní stav:
+- View = cyklicky List → Grid → Magazine → Compact,
+- Theme = Light ↔ Dark,
+- Language = EN ↔ CZ,
+- Scale = 90 → 100 → 110 → 90.
+
+Aktuální hodnota se nezobrazuje jako text uvnitř ovladače. Je dostupná přes tooltip a aria-label.
+
+Rozměry:
 - 32 × 32px desktop,
 - 30 × 30px mobile,
 - 1px border,
 - border-radius 50%,
-- ikona nebo krátká hodnota uvnitř,
-- aktivní stav = accent fill,
 - pouze click interaction.
 
 Search panel obsahuje:
