@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import { ModeButton } from './components/ModeButton'
+import { PostPage } from './components/PostPage'
 import { PostCard } from './components/PostCard'
 import { posts } from './data/posts'
 import {
@@ -33,6 +34,11 @@ export default function App() {
   const [scale, setScale] = useState<Scale>(100)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(() => {
+    const value = new URLSearchParams(window.location.search).get('post')
+    const id = value ? Number(value) : NaN
+    return Number.isInteger(id) && id > 0 ? id : null
+  })
 
   const { theme, viewMode } = preferences
   const isDark = theme === 'dark'
@@ -45,6 +51,8 @@ export default function App() {
 
   const nextScale =
     SCALE_ORDER[(SCALE_ORDER.indexOf(scale) + 1) % SCALE_ORDER.length]
+
+  const selectedPost = selectedPostId ? posts.find(post => post.id === selectedPostId) : undefined
 
   const filteredPosts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase()
@@ -60,6 +68,13 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.lang = language.toLowerCase()
+    const syncPost = () => {
+      const value = new URLSearchParams(window.location.search).get('post')
+      const id = value ? Number(value) : NaN
+      setSelectedPostId(Number.isInteger(id) && id > 0 ? id : null)
+    }
+    window.addEventListener('popstate', syncPost)
+    return () => window.removeEventListener('popstate', syncPost)
   }, [language])
 
   function handleViewModeChange() {
@@ -205,6 +220,9 @@ export default function App() {
         )}
       </header>
 
+      {selectedPost ? (
+        <PostPage post={selectedPost} />
+      ) : (
       <main className="main-content">
         <section className="hero">
           <h1 className="hero-title">
@@ -274,6 +292,7 @@ export default function App() {
           )}
         </section>
       </main>
+      )}
 
       <footer className="site-footer">
         <div className="footer-inner">
