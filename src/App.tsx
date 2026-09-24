@@ -94,25 +94,6 @@ export default function App() {
     if (email.trim()) setSubscribed(true)
   }
 
-  function cycleViewMode() {
-    const modes = Object.keys(VIEW_MODES) as Array<keyof typeof VIEW_MODES>
-    const index = modes.indexOf(viewMode)
-    const nextMode = modes[(index + 1) % modes.length]
-    updatePreference('viewMode', nextMode)
-  }
-
-  function cycleTheme() {
-    updatePreference('theme', theme === 'light' ? 'dark' : 'light')
-  }
-
-  function cycleLanguage() {
-    setLanguage(language === 'EN' ? 'CZ' : 'EN')
-  }
-
-  function cycleScale() {
-    setScale(scale === 90 ? 100 : scale === 100 ? 110 : 90)
-  }
-
   return (
     <div className="app" data-theme={theme}>
       <header className="site-header">
