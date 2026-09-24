@@ -114,7 +114,7 @@ export default function App() {
   }
 
   return (
-    <div className="app scale-100" data-theme={theme}>
+    <div className="app" data-theme={theme}>
       <header className="site-header">
         <div className="header-inner">
           <span className="brand">Dimple</span>
