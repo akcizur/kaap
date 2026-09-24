@@ -35,7 +35,7 @@ Hlavní technické části:
 - TypeScript strict,
 - Lucide React,
 - Google Sans,
-- MuseoModerno,
+- Fragment Mono,
 - ruční CSS,
 - GitHub Actions,
 - GitHub Pages.
@@ -478,7 +478,7 @@ Primary font pro:
 - controls,
 - forms.
 
-### MuseoModerno
+### Fragment Mono
 
 Secondary font pro:
 
@@ -488,7 +488,7 @@ Secondary font pro:
 - metadata,
 - editorial notes.
 
-MuseoModerno není alternativní body font. Je to metadata/signature layer.
+Fragment Mono není alternativní body font. Je to metadata/signature layer.
 
 ---
 
@@ -902,7 +902,7 @@ Bez vědomého redesignu zachovej:
 
 - 768px content column,
 - monochromatickou paletu,
-- Google Sans + MuseoModerno,
+- Google Sans + Fragment Mono,
 - 56px header,
 - contextual subbar,
 - malé ikony,
