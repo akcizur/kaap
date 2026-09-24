@@ -240,60 +240,54 @@ Browser history:
 
 ## 11. Navigation state
 
-Navbar má pouze dvě interaktivní utility akce:
+Navbar má tři přímé controls:
 
-    settings
+    layout
+    theme
     search
 
 Stav:
 
-    settingsOpen
     searchOpen
+    searchQuery
 
-Pravidlo:
+Layout a Theme nemají open state.
 
-    settingsOpen === true
-       → searchOpen === false
+### Layout
 
-    searchOpen === true
-       → settingsOpen === false
+Kliknutí:
 
-Obsah se neřídí hoverem. Aktivní panel se vykresluje přímo uvnitř sticky headeru, ale je absolutně pozicovaný mimo běžný layout flow.
+    current viewMode
+        ↓
+    next viewMode
+        ↓
+    PostCard
 
-Settings overlay obsahuje pouze jeden kruhový button pro každou funkci. Kliknutí mění hodnotu cyklicky, takže se nezobrazuje sada variantních tlačítek.
+### Theme
 
-### Settings panel
+Kliknutí:
 
-    settings
-      ↓
-    nav-panel--settings
-      ↓
-    four icon-only controls
-      ├── view mode (cycle)
-      ├── theme (toggle)
-      ├── language (toggle)
-      └── scale (cycle)
+    light ↔ dark
+        ↓
+    data-theme
+        ↓
+    CSS tokens
 
-### Search panel
+### Search
 
-    search
-      ↓
+Kliknutí:
+
+    searchOpen
+        ↓
     nav-panel--search
-      ├── input
-      └── clear
+        ↓
+    searchQuery
+        ↓
+    filteredPosts
 
-### Footer external links
+Search panel je overlay pod 56px navbarem a neovlivňuje layout flow.
 
-    footer
-      ├── website
-      ├── mail
-      └── github
-
-Neexistuje samostatný subnavbar ani contextual nav state.
-
-Navbar zůstává vždy vysoký 56px. Otevřený panel překrývá obsah stránky pod navbarovou linií a nemění výšku headeru.
-
----
+Neexistuje Settings menu, subnavbar, Language button ani Scale button.
 
 ## 13. View mode graph
 
