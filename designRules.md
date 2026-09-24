@@ -295,61 +295,51 @@ Aktivace nemá způsobit velký layout shift.
 
 ---
 
-## 13. Single navbar
+## 13. Direct navbar controls
 
-Navbar je jediná navigační vrstva.
+Navbar je jediná navigační vrstva. Neexistuje Settings menu ani subnavbar.
 
 Hlavní řádek obsahuje:
 
 - Dimple brand,
-- Settings,
+- Layout,
+- Theme,
 - Search.
 
-Settings a Search jsou vždy ovládány pouze kliknutím. Hover nemění obsah navbaru.
+### Layout
 
-Po aktivaci se obsah otevře přímo uvnitř headeru jako navbar panel.
+Jeden kruhový button.
 
-Settings overlay obsahuje pouze čtyři kruhové icon buttons:
+Kliknutí cyklicky mění:
 
-- View mode,
-- Theme,
-- Language,
-- UI scale.
+List → Grid → Magazine → Compact → List
 
-Každá funkce má právě jeden button. Button zobrazuje pouze jednu ikonu.
+Uvnitř je pouze ikona aktuálního layoutu.
 
-Kliknutí přímo změní stav:
-- View = cyklicky List → Grid → Magazine → Compact,
-- Theme = Light ↔ Dark,
-- Language = EN ↔ CZ,
-- Scale = 90 → 100 → 110 → 90.
+### Theme
 
-Aktuální hodnota se nezobrazuje jako text uvnitř ovladače. Je dostupná přes tooltip a aria-label.
+Jeden kruhový button.
 
-Rozměry:
-- 32 × 32px desktop,
-- 30 × 30px mobile,
-- 1px border,
-- border-radius 50%,
-- pouze click interaction.
+Kliknutí přepíná:
 
-Search panel obsahuje:
+Light ↔ Dark
 
-- search field,
-- clear action.
+Uvnitř je pouze ikona aktuálního theme.
 
-Pravidla:
+### Search
 
-- žádný samostatný subnavbar,
-- žádný hover-driven navigation context,
-- nejvýše jeden otevřený panel,
-- hlavní navbar má pevnou výšku 56px,
-- panel je absolutně pozicovaný pod navbar,
-- otevření panelu nesmí zvětšit header ani posunout page content,
-- panel používá stejnou 768px content disciplínu jako header a main,
-- panel nesmí vytvářet horizontal overflow mimo vlastní scrollovací řádek.
+Jeden kruhový button. Kliknutí otevře search field jako overlay pod 56px navbar.
 
----
+### Removed controls
+
+- Settings menu,
+- subnavbar,
+- Language button,
+- Scale button.
+
+### Interaction rule
+
+Všechny navbar actions jsou click-only. Hover pouze mění vizuální stav, nikdy nepřepíná funkci ani neotevírá navigační obsah.
 
 ## 14. Hover
 
