@@ -155,8 +155,11 @@ button:focus-visible, input:focus-visible, article:focus-visible { outline: 2px 
 }
 
 .nav-button:hover,
-.nav-button:focus-visible,
 .nav-button:focus-visible {
+  width: auto;
+  min-width: 32px;
+  padding: 0 11px;
+  gap: 7px;
   background: var(--surface-strong);
   border-color: var(--border-strong);
   color: var(--text);
