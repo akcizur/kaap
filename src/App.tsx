@@ -173,7 +173,7 @@ export default function App() {
             </div>
           </div>
         )}
-
+      </header>
 
       {selectedPost ? (
         <PostPage post={selectedPost} />
