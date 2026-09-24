@@ -104,6 +104,7 @@ article:focus-visible {
   position: sticky;
   top: 0;
   z-index: 50;
+  height: 56px;
   backdrop-filter: blur(12px);
   background: var(--header-bg);
   border-bottom: 1px solid var(--border-soft);
@@ -181,7 +182,13 @@ article:focus-visible {
 }
 
 .nav-panel {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  z-index: 49;
   border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
   background: var(--surface);
   animation: nav-panel-in .18s ease-out;
 }
@@ -904,9 +911,18 @@ article:focus-visible {
 @media (max-width: 640px) {
   .header-inner {
     min-height: 56px;
+    height: 56px;
     padding-left: 16px;
     padding-right: 16px;
     gap: 10px;
+  }
+
+  .site-header {
+    height: 56px;
+  }
+
+  .nav-panel {
+    top: 56px;
   }
 
   .header-actions {
