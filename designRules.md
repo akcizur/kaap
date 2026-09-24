@@ -29,7 +29,7 @@ Sekundární vlastnosti:
 - jemné borders,
 - velmi malé ikony,
 - omezené radius,
-- metadata v MuseoModerno,
+- metadata v Fragment Mono,
 - krátké mikroanimace,
 - minimum stínů.
 
@@ -117,7 +117,7 @@ Použití:
 - forms,
 - buttons.
 
-### MuseoModerno
+### Fragment Mono
 
 Použití:
 
@@ -128,7 +128,7 @@ Použití:
 - metadata,
 - jemná editorial označení.
 
-MuseoModerno nesmí nahradit běžný body text.
+Fragment Mono nesmí nahradit běžný body text.
 
 ---
 
@@ -187,7 +187,7 @@ Metadata mají být vizuálně sekundární.
 
 Typický pattern:
 
-11px + MuseoModerno + weight 400.
+11px + Fragment Mono + weight 400.
 
 Datum používá extra-small treatment kolem 9px.
 
@@ -713,7 +713,7 @@ Při konfliktu:
     [ ] monochrome
     [ ] 768px discipline
     [ ] Google Sans role
-    [ ] MuseoModerno metadata
+    [ ] Fragment Mono metadata
     [ ] 1px borders
     [ ] small icons
     [ ] visible focus
