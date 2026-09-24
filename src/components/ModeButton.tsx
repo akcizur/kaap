@@ -11,11 +11,11 @@ type ModeButtonProps = {
 export function ModeButton({ mode, icon, label, active, onClick }: ModeButtonProps) {
   return (
     <button
-      className={\`mode-button\${active ? ' is-active' : ''}\`}
+      className={`mode-button${active ? ' is-active' : ''}`}
       data-mode={mode}
       onClick={onClick}
       title={label}
-      aria-label={\`\${label} view\`}
+      aria-label={`${label} view`}
       aria-pressed={active}
     >
       {icon}
