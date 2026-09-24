@@ -272,38 +272,14 @@ article:focus-visible {
 }
 
 .nav-panel--settings .nav-panel-inner {
-  display: grid;
-  gap: 8px;
-}
-
-.nav-setting-row {
-  min-height: 34px;
   display: flex;
+  justify-content: flex-end;
+}
+
+.nav-settings-controls {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-}
-
-.nav-setting-label {
-  flex: 0 0 64px;
-  color: var(--text-faint);
-  font-family: var(--font-secondary);
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
-
-.nav-setting-options {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.nav-setting-options::-webkit-scrollbar {
-  display: none;
+  gap: 6px;
 }
 
 .nav-setting-option {
@@ -969,17 +945,12 @@ article:focus-visible {
     padding-right: 16px;
   }
 
-  .nav-setting-row {
-    align-items: flex-start;
+  .nav-panel--settings .nav-panel-inner {
+    justify-content: flex-end;
   }
 
-  .nav-setting-label {
-    flex-basis: 56px;
-    padding-top: 9px;
-  }
-
-  .nav-setting-options {
-    flex: 1;
+  .nav-settings-controls {
+    gap: 5px;
   }
 
   .nav-setting-option {
