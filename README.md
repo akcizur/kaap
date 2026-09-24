@@ -58,15 +58,17 @@ Repository name a UI identity nejsou stejné. To je současný záměrný stav.
 
 ## 3. Stav projektu
 
-Aktuální HEAD je commit:
+Aktuální stav dokumentace odpovídá revizi single-navbar architektury z 24. září 2026.
 
-91fc05c7682e574953f87a507ce9e33601679f21
+Poslední relevantní změny:
 
-Commit message:
+- single expandable navbar,
+- Settings a Search přímo uvnitř headeru,
+- Web / Mail / GitHub přesunuty do footeru,
+- odstraněn samostatný settings modal,
+- odstraněn contextual navigation layer.
 
-Refine subnavbar as lightweight navbar
-
-Tato dokumentace popisuje stav k tomuto revision. Při změnách architektury je nutné README znovu zkontrolovat.
+Při dalších architektonických změnách je nutné README znovu zkontrolovat.
 
 ---
 
@@ -124,7 +126,6 @@ Mentální model:
         ├── navbar state
         ├── PostCard
         ├── PostPage
-        └── SettingsModal
                 ↓
         public/styles.css
 
@@ -217,7 +218,7 @@ Vlastní zejména:
 ### Derived state
 
 - selectedPost,
-- filteredPosts,
+- filteredPosts
 
 ### Effects
 
@@ -536,7 +537,7 @@ Po aktivaci se přímo uvnitř headeru otevře:
 - Settings panel s View / Theme / Language / Scale,
 - nebo Search panel s inputem.
 
-Neexistuje samostatný contextual subbar.
+Neexistuje samostatný subnavbar ani contextual navigation layer.
 
 ### Footer links
 
@@ -634,8 +635,6 @@ Aktuálně jsou použity:
 - aria-expanded,
 - aria-controls,
 - aria-pressed,
-- role dialog,
-- aria-modal,
 - focus-visible,
 - Escape,
 - semantic header/nav/main/article/footer.
@@ -660,17 +659,15 @@ Přibližná struktura:
 2. dark theme,
 3. global base,
 4. header,
-5. main content,
-6. posts,
-7. view modes,
-8. newsletter,
-9. footer,
-10. modal,
-11. search,
-12. utilities,
-13. post detail,
-14. responsive,
-15. contextual subbar.
+5. navbar panels,
+6. main content,
+7. posts,
+8. view modes,
+9. newsletter,
+10. footer,
+11. utilities,
+12. post detail,
+13. responsive.
 
 CSS je globální.
 
@@ -828,7 +825,7 @@ Proto:
 | nový view mode | viewModes.ts + PostCard.tsx + CSS |
 | theme token | public/styles.css |
 | navbar action | App.tsx |
-| settings option | SettingsModal.tsx + App.tsx |
+| settings option | inline settings panel v App.tsx + App.tsx |
 | persistent preference | usePreferences.ts |
 | detail postu | PostPage.tsx |
 | build/base path | vite.config.ts |
