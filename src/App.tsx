@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   Globe2,
-  Languages,
+  LayoutGrid,
   Mail,
   Moon,
-  Scaling,
   Search,
-  Settings2,
   Sun,
   X,
 } from 'lucide-react'
@@ -16,16 +14,10 @@ import { posts } from './data/posts'
 import { VIEW_MODES } from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
 
-type Language = 'EN' | 'CZ'
-type Scale = 90 | 100 | 110
-
 export default function App() {
   const { preferences, updatePreference } = usePreferences()
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
-  const [language, setLanguage] = useState<Language>('EN')
-  const [scale, setScale] = useState<Scale>(100)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -54,7 +46,6 @@ export default function App() {
   }, [searchQuery])
 
   useEffect(() => {
-    document.documentElement.lang = language.toLowerCase()
     const syncPost = () => {
       const value = new URLSearchParams(window.location.search).get('post')
       const id = value ? Number(value) : NaN
@@ -62,37 +53,41 @@ export default function App() {
     }
     window.addEventListener('popstate', syncPost)
     return () => window.removeEventListener('popstate', syncPost)
-  }, [language])
+  }, [])
 
   useEffect(() => {
-    if (!settingsOpen && !searchOpen) return
+    if (!searchOpen) return
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setSettingsOpen(false)
         setSearchOpen(false)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [settingsOpen, searchOpen])
+  }, [searchOpen])
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus()
   }, [searchOpen])
 
   function handleSearchToggle() {
-    setSettingsOpen(false)
     setSearchOpen(open => {
       if (open) setSearchQuery('')
       return !open
     })
   }
 
-  function handleSettingsToggle() {
-    setSearchOpen(false)
-    setSettingsOpen(open => !open)
+  function handleLayoutToggle() {
+    const modes = Object.keys(VIEW_MODES) as Array<keyof typeof VIEW_MODES>
+    const index = modes.indexOf(viewMode)
+    const nextMode = modes[(index + 1) % modes.length]
+    updatePreference('viewMode', nextMode)
+  }
+
+  function handleThemeToggle() {
+    updatePreference('theme', theme === 'light' ? 'dark' : 'light')
   }
 
   function handleSubscribe(event: FormEvent<HTMLFormElement>) {
@@ -120,24 +115,41 @@ export default function App() {
   }
 
   return (
-    <div className={`app scale-${scale}`} data-theme={theme}>
+    <div className="app scale-100" data-theme={theme}>
       <header className="site-header">
         <div className="header-inner">
           <span className="brand">Dimple</span>
 
           <nav className="header-actions" aria-label="Site controls">
             <button
-              className={`nav-button${settingsOpen ? ' is-active' : ''}`}
-              onClick={handleSettingsToggle}
-              title="Settings"
-              aria-label="Display settings"
-              aria-expanded={settingsOpen}
-              aria-controls="navbar-settings"
+              type="button"
+              className="nav-button"
+              onClick={handleLayoutToggle}
+              title={`Layout: ${VIEW_MODES[viewMode].label}`}
+              aria-label={`Change layout. Current: ${VIEW_MODES[viewMode].label}`}
             >
-              <Settings2 className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+              {(() => {
+                const ViewIcon = VIEW_MODES[viewMode].icon
+                return <ViewIcon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+              })()}
             </button>
 
             <button
+              type="button"
+              className="nav-button"
+              onClick={handleThemeToggle}
+              title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
+              aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
+            >
+              {theme === 'light' ? (
+                <Sun className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+              ) : (
+                <Moon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+              )}
+            </button>
+
+            <button
+              type="button"
               className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`}
               onClick={handleSearchToggle}
               title={searchOpen ? 'Close search' : 'Search'}
@@ -183,61 +195,6 @@ export default function App() {
           </div>
         )}
 
-        {settingsOpen && (
-          <div id="navbar-settings" className="nav-panel nav-panel--settings">
-            <div className="nav-panel-inner">
-              <nav className="nav-settings-controls" aria-label="Display options">
-                <button
-                  type="button"
-                  className="nav-setting-option"
-                  onClick={cycleViewMode}
-                  title={`View: ${VIEW_MODES[viewMode].label}`}
-                  aria-label={`Change view mode. Current: ${VIEW_MODES[viewMode].label}`}
-                >
-                  {(() => {
-                    const ViewIcon = VIEW_MODES[viewMode].icon
-                    return <ViewIcon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                  })()}
-                </button>
-
-                <button
-                  type="button"
-                  className="nav-setting-option"
-                  onClick={cycleTheme}
-                  title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
-                  aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
-                >
-                  {theme === 'light' ? (
-                    <Sun className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                  ) : (
-                    <Moon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  className="nav-setting-option"
-                  onClick={cycleLanguage}
-                  title={`Language: ${language}`}
-                  aria-label={`Change language. Current: ${language}`}
-                >
-                  <Languages className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                </button>
-
-                <button
-                  type="button"
-                  className="nav-setting-option"
-                  onClick={cycleScale}
-                  title={`UI scale: ${scale}%`}
-                  aria-label={`Change UI scale. Current: ${scale}%`}
-                >
-                  <Scaling className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                </button>
-              </nav>
-            </div>
-          </div>
-        )}
-      </header>
 
       {selectedPost ? (
         <PostPage post={selectedPost} />
