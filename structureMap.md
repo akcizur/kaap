@@ -32,7 +32,7 @@ Definuje:
     │   │   ├── ModeButton.tsx
     │   │   ├── PostCard.tsx
     │   │   ├── PostPage.tsx
-    │   │   └── SettingsModal.tsx
+    │   │   └── ModeButton.tsx
     │   ├── config/
     │   │   └── viewModes.ts
     │   ├── data/
@@ -59,7 +59,7 @@ Definuje:
 | App.tsx | orchestrace + state + composition |
 | PostCard.tsx | post presentation |
 | PostPage.tsx | detail presentation |
-| SettingsModal.tsx | settings UI |
+| App.tsx | navbar settings/search UI + orchestration |
 | ModeButton.tsx | reusable mode control |
 | viewModes.ts | mode configuration |
 | posts.ts | content data |
@@ -82,7 +82,7 @@ Definuje:
        ├── src/hooks/usePreferences.ts
        ├── components/PostCard.tsx
        ├── components/PostPage.tsx
-       └── components/SettingsModal.tsx
+       └── components/navbar settings.tsx
 
 CSS flow:
 
@@ -109,7 +109,6 @@ App.tsx vlastní:
     settingsOpen
     searchOpen
     searchQuery
-    hoveredNavItem
     selectedPostId
 
 usePreferences vlastní:
@@ -121,8 +120,6 @@ Derived:
 
     selectedPost
     filteredPosts
-    subbarItem
-    showSubbar
 
 ---
 
@@ -246,51 +243,52 @@ Browser history:
 
 ## 11. Navigation state
 
-Typ NavItem:
+Navbar má pouze dvě interaktivní utility akce:
 
     settings
     search
-    github
-    website
-    mail
 
 Stav:
 
-hoveredNavItem
+    settingsOpen
+    searchOpen
 
-Výpočet:
+Pravidlo:
 
-    hoveredNavItem
-       ↓
-    subbarItem
+    settingsOpen === true
+       → searchOpen === false
 
-Fallback:
+    searchOpen === true
+       → settingsOpen === false
 
-    searchOpen ? search : null
+Obsah se neřídí hoverem. Aktivní panel se vykresluje přímo uvnitř sticky headeru.
 
-Settings modal má vyšší vizuální prioritu a subbar se při jeho otevření skryje.
+### Settings panel
 
----
+    settings
+      ↓
+    nav-panel--settings
+      ├── view mode
+      ├── theme
+      ├── language
+      └── scale
 
-## 12. Subbar architecture
+### Search panel
 
-    NavItem
-       ├── settings
-       │    ├── view mode
-       │    ├── theme
-       │    ├── language
-       │    ├── scale
-       │    └── More
-       ├── search
-       │    └── input
-       ├── github
-       │    └── external link
-       ├── website
-       │    └── dimple.blog
-       └── mail
-            └── mailto
+    search
+      ↓
+    nav-panel--search
+      ├── input
+      └── clear
 
-Main navbar je stabilní. Subbar poskytuje kontext.
+### Footer external links
+
+    footer
+      ├── website
+      ├── mail
+      └── github
+
+Neexistuje samostatný subnavbar ani contextual nav state.
 
 ---
 
@@ -302,7 +300,6 @@ Main navbar je stabilní. Subbar poskytuje kontext.
        └── VIEW_MODES
              ↓
         App.tsx
-        SettingsModal.tsx
         PostCard.tsx
         usePreferences.ts
 
@@ -346,12 +343,6 @@ Nízká coupling:
 
 - Post.
 
-### SettingsModal.tsx
-
-UI coupling přes props a callbacks.
-
-Nemá vlastní persistence.
-
 ### ModeButton.tsx
 
 Malý reusable primitive.
@@ -368,16 +359,14 @@ styles.css je globální a lze ho číst v pořadí:
 2. dark theme,
 3. global base,
 4. app/header,
-5. main content,
-6. posts,
-7. newsletter,
-8. footer,
-9. settings modal,
-10. search,
-11. utilities,
-12. post detail,
-13. responsive,
-14. subbar.
+5. navbar panels,
+6. main content,
+7. posts,
+8. newsletter,
+9. footer,
+10. utilities,
+11. post detail,
+12. responsive.
 
 Design rules pro tento stylesheet jsou v designRules.md.
 
@@ -421,13 +410,13 @@ Scale není součást theme systému.
 
 ---
 
-## 19. Modal flow
+## 19. Navbar settings flow
 
     settings trigger
           ↓
     settingsOpen=true
           ↓
-    SettingsModal
+    nav-panel--settings
        ├── theme
        ├── view mode
        ├── language
@@ -439,9 +428,11 @@ Scale není součást theme systému.
 
 Close:
 
-    X / backdrop / Escape / Done
+    Settings / Search / Escape
                  ↓
           settingsOpen=false
+
+Neexistuje modal backdrop ani samostatná settings komponenta.
 
 ---
 
@@ -599,19 +590,18 @@ App ↔ usePreferences ↔ localStorage
 
 ---
 
-## 28. Adding navigation context
+## 28. Adding navigation control
 
-Nový nav context vyžaduje:
+Nová hlavní navigační akce musí mít:
 
-1. NavItem type,
-2. nav control,
-3. hover handler,
-4. focus handler,
-5. subbar branch,
-6. mobile behavior,
-7. případné CSS.
+1. nav control v App.tsx,
+2. jasný aktivní state,
+3. keyboard/focus behavior,
+4. odpovídající panel pouze pokud je nutný,
+5. mobile behavior,
+6. případné CSS.
 
-Nav context má být informačně lehký.
+Externí odkazy patří do footeru, ne do hlavního navbaru.
 
 ---
 
@@ -666,7 +656,7 @@ App.tsx:
 - focus/search behavior,
 - keyboard behavior.
 
-SettingsModal:
+navbar settings:
 
 - dialog,
 - modal semantics,
@@ -693,7 +683,7 @@ Nízké riziko:
 Střední riziko:
 
 - nový view mode,
-- subbar,
+- navbar panel,
 - settings option,
 - PostPage markup.
 
@@ -778,8 +768,9 @@ Pro současnou velikost projektu by tento split byl zbytečná abstrakce.
 | search | ✓ |  | ✓ |  |  | ✓ |
 | theme | ✓ | ✓ |  | ✓ |  | ✓ |
 | view mode | ✓ | ✓ |  | ✓ | ✓ | ✓ |
-| settings | ✓ | ✓ |  |  | ✓ | ✓ |
-| subbar | ✓ |  |  |  | ✓ | ✓ |
+| settings | ✓ |  |  | ✓ | ✓ | ✓ |
+| navbar panel | ✓ |  |  |  |  | ✓ |
+
 | newsletter | ✓ |  |  |  |  | ✓ |
 | Pages deployment |  |  |  |  |  |  |
 
@@ -811,7 +802,7 @@ search
 
 viewModes.ts
   ↓
-SettingsModal
+navbar settings
   ↓
 App
   ↓
