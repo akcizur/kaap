@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import {
   Globe2,
+  Languages,
   Mail,
   Moon,
+  Scaling,
   Search,
   Settings2,
   Sun,
@@ -11,7 +13,7 @@ import {
 import { PostPage } from './components/PostPage'
 import { PostCard } from './components/PostCard'
 import { posts } from './data/posts'
-import { VIEW_MODE_ORDER, VIEW_MODES } from './config/viewModes'
+import { VIEW_MODES } from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
 
 type Language = 'EN' | 'CZ'
@@ -98,6 +100,25 @@ export default function App() {
     if (email.trim()) setSubscribed(true)
   }
 
+  function cycleViewMode() {
+    const modes = Object.keys(VIEW_MODES) as Array<keyof typeof VIEW_MODES>
+    const index = modes.indexOf(viewMode)
+    const nextMode = modes[(index + 1) % modes.length]
+    updatePreference('viewMode', nextMode)
+  }
+
+  function cycleTheme() {
+    updatePreference('theme', theme === 'light' ? 'dark' : 'light')
+  }
+
+  function cycleLanguage() {
+    setLanguage(language === 'EN' ? 'CZ' : 'EN')
+  }
+
+  function cycleScale() {
+    setScale(scale === 90 ? 100 : scale === 100 ? 110 : 90)
+  }
+
   return (
     <div className={`app scale-${scale}`} data-theme={theme}>
       <header className="site-header">
@@ -165,89 +186,56 @@ export default function App() {
         {settingsOpen && (
           <div id="navbar-settings" className="nav-panel nav-panel--settings">
             <div className="nav-panel-inner">
-              <div className="nav-setting-row">
-                <span className="nav-setting-label">View</span>
-                <div className="nav-setting-options" role="group" aria-label="View mode">
-                  {VIEW_MODE_ORDER.map(mode => {
-                    const ModeIcon = VIEW_MODES[mode].icon
+              <nav className="nav-settings-controls" aria-label="Display options">
+                <button
+                  type="button"
+                  className="nav-setting-option"
+                  onClick={cycleViewMode}
+                  title={`View: ${VIEW_MODES[viewMode].label}`}
+                  aria-label={`Change view mode. Current: ${VIEW_MODES[viewMode].label}`}
+                >
+                  {(() => {
+                    const ViewIcon = VIEW_MODES[viewMode].icon
+                    return <ViewIcon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                  })()}
+                </button>
 
-                    return (
-                      <button
-                        key={mode}
-                        type="button"
-                        className={`nav-setting-option${viewMode === mode ? ' is-active' : ''}`}
-                        onClick={() => updatePreference('viewMode', mode)}
-                        title={VIEW_MODES[mode].label}
-                        aria-label={`View: ${VIEW_MODES[mode].label}`}
-                        aria-pressed={viewMode === mode}
-                      >
-                        <ModeIcon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
+                <button
+                  type="button"
+                  className="nav-setting-option"
+                  onClick={cycleTheme}
+                  title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
+                  aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
+                >
+                  {theme === 'light' ? (
+                    <Sun className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                  ) : (
+                    <Moon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                  )}
+                </button>
 
-              <div className="nav-setting-row">
-                <span className="nav-setting-label">Theme</span>
-                <div className="nav-setting-options" role="group" aria-label="Theme">
-                  {(['light', 'dark'] as const).map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`nav-setting-option${theme === option ? ' is-active' : ''}`}
-                      onClick={() => updatePreference('theme', option)}
-                      title={option === 'light' ? 'Light' : 'Dark'}
-                      aria-label={`Theme: ${option === 'light' ? 'Light' : 'Dark'}`}
-                      aria-pressed={theme === option}
-                    >
-                      {option === 'light' ? (
-                        <Sun className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                      ) : (
-                        <Moon className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                <button
+                  type="button"
+                  className="nav-setting-option nav-setting-option--value"
+                  onClick={cycleLanguage}
+                  title={`Language: ${language}`}
+                  aria-label={`Change language. Current: ${language}`}
+                >
+                  <Languages className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                  <span>{language}</span>
+                </button>
 
-              <div className="nav-setting-row">
-                <span className="nav-setting-label">Language</span>
-                <div className="nav-setting-options" role="group" aria-label="Language">
-                  {(['EN', 'CZ'] as const).map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`nav-setting-option${language === option ? ' is-active' : ''}`}
-                      onClick={() => setLanguage(option)}
-                      title={`Language: ${option}`}
-                      aria-label={`Language: ${option}`}
-                      aria-pressed={language === option}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="nav-setting-row">
-                <span className="nav-setting-label">Scale</span>
-                <div className="nav-setting-options" role="group" aria-label="UI scale">
-                  {([90, 100, 110] as const).map(option => (
-                    <button
-                      key={option}
-                      type="button"
-                      className={`nav-setting-option${scale === option ? ' is-active' : ''}`}
-                      onClick={() => setScale(option)}
-                      title={`UI scale: ${option}%`}
-                      aria-label={`UI scale: ${option}%`}
-                      aria-pressed={scale === option}
-                    >
-                      {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
+                <button
+                  type="button"
+                  className="nav-setting-option nav-setting-option--value"
+                  onClick={cycleScale}
+                  title={`UI scale: ${scale}%`}
+                  aria-label={`Change UI scale. Current: ${scale}%`}
+                >
+                  <Scaling className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                  <span>{scale}</span>
+                </button>
+              </nav>
             </div>
           </div>
         )}
