@@ -239,15 +239,14 @@ Nezahušťuj layout pouze kvůli využití prostoru.
 Aktuální language:
 
 - icon controls = circle,
-- search = pill,
+- search input = 10px,
+- navbar settings options = 7px,
 - small chip = 6px,
 - input = 10px,
-- settings buttons = 10px,
 - post card = 16px,
-- newsletter = 20px,
-- settings modal = 20px.
+- newsletter = 20px.
 
-Pill je výjimka, která patří hlavně search/subbar controls.
+Pill není součástí hlavní navigace. Search je inline field přímo v navbar panelu.
 
 ---
 
@@ -296,25 +295,37 @@ Aktivace nemá způsobit velký layout shift.
 
 ---
 
-## 13. Contextual subbar
+## 13. Single navbar
 
-Subbar je lehké rozšíření hlavního navbaru.
+Navbar je jediná navigační vrstva.
 
-Má:
+Hlavní řádek obsahuje:
 
-- thin border,
-- surface,
-- horizontal scroll,
-- max-height,
-- krátkou enter animaci.
+- Dimple brand,
+- Settings,
+- Search.
 
-Animace:
+Po aktivaci se obsah otevře přímo uvnitř headeru jako navbar panel.
 
-- opacity 0 → 1,
-- translateY -4px → 0,
-- cca 0.18s ease-out.
+Settings panel obsahuje:
 
-Subbar controls mohou používat pill radius. Je to záměrná utility výjimka.
+- View,
+- Theme,
+- Language,
+- Scale.
+
+Search panel obsahuje:
+
+- search field,
+- clear action.
+
+Pravidla:
+
+- žádný samostatný subnavbar,
+- žádný hover-driven navigation context,
+- nejvýše jeden otevřený panel,
+- panel používá stejnou 768px content disciplínu jako header a main,
+- panel nesmí vytvářet horizontal overflow mimo vlastní scrollovací řádek.
 
 ---
 
@@ -494,33 +505,19 @@ Newsletter nemá převzít vizuální prvenství nad hero a posty.
 
 ---
 
-## 24. Modal
+## 24. Footer links
 
-Settings modal:
+Web, Mail a GitHub nejsou součástí hlavního navbaru.
 
-- max-width 420px,
-- padding 24px,
-- radius 20px,
-- border,
-- surface-dark,
-- strong but controlled shadow.
+Ve footeru používají:
 
-Backdrop:
+- 32 × 32px icon control,
+- kruhový hit area,
+- 15px icon,
+- transparent default,
+- surface-strong + border-strong on hover/focus.
 
-- full viewport,
-- dark overlay,
-- blur,
-- z-index 100.
-
-Hierarchy:
-
-title
-separator
-section label
-controls
-spacing
-controls
-done
+Footer links jsou čistě navigační. Nemají vlastní contextual panel.
 
 ---
 
@@ -561,7 +558,7 @@ Utility animations:
 
 cca 0.15s.
 
-Subbar:
+Navbar panel:
 
 cca 0.18s.
 
@@ -591,7 +588,7 @@ Breakpoint 640px:
 
 - padding 16px,
 - buttons 32px,
-- compact subbar,
+- compact navbar panel,
 - helper text may hide,
 - smaller newsletter,
 - responsive title.
