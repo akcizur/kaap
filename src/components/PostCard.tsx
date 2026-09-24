@@ -16,7 +16,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
           <span className="post-category">{post.category}</span>
           <span className="compact-title">{post.title}</span>
         </div>
-        <span className="compact-date">{post.date}</span>
+        <span className="compact-date post-date-text">{post.date}</span>
       </article>
     )
   }
@@ -27,7 +27,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
         className={`${articleClassName}${index === 0 ? ' is-featured' : ''}`}
         tabIndex={0}
       >
-        <div className="post-kicker">{post.category} · {post.date}</div>
+        <div className="post-kicker">{post.category} · <span className="post-kicker-date">{post.date}</span></div>
         <h4>{post.title}</h4>
         {index === 0 && <p>{post.excerpt}</p>}
       </article>
@@ -40,7 +40,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
         <div className="post-kicker">{post.category}</div>
         <h4>{post.title}</h4>
         <p>{post.excerpt}</p>
-        <div className="post-date">{post.date}</div>
+        <div className="post-date post-date-text">{post.date}</div>
       </article>
     )
   }
@@ -51,7 +51,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
       <p>{post.excerpt}</p>
       <div className="post-meta">
         <span>{post.category}</span>
-        <span>{post.date} · {post.readTime}</span>
+        <span><span className="post-date-text">{post.date}</span> · {post.readTime}</span>
       </div>
     </article>
   )
