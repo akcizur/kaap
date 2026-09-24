@@ -305,6 +305,8 @@ Hlavní řádek obsahuje:
 - Settings,
 - Search.
 
+Settings a Search jsou vždy ovládány pouze kliknutím. Hover nemění obsah navbaru.
+
 Po aktivaci se obsah otevře přímo uvnitř headeru jako navbar panel.
 
 Settings panel obsahuje:
@@ -313,6 +315,16 @@ Settings panel obsahuje:
 - Theme,
 - Language,
 - Scale.
+
+Všechny jednotlivé volby používají jednotné kruhové toggle buttons:
+
+- 32 × 32px desktop,
+- 30 × 30px mobile,
+- 1px border,
+- border-radius 50%,
+- ikona nebo krátká hodnota uvnitř,
+- aktivní stav = accent fill,
+- pouze click interaction.
 
 Search panel obsahuje:
 
@@ -348,7 +360,8 @@ Nepřidávej:
 - glow,
 - heavy shadow,
 - scale 1.05,
-- permanent motion.
+- permanent motion,
+- hover jako mechanismus pro přepínání navigačního obsahu.
 
 ---
 
