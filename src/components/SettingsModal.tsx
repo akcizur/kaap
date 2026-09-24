@@ -87,8 +87,7 @@ export function SettingsModal({
           </div>
         </div>
 
-        <button className="done-button" onClick={onClose}>
-          <span>Done</span>
+        <button className="done-button" onClick={onClose} title="Done" aria-label="Done">
           <Check className="ui-icon" size={15} strokeWidth={2.2} aria-hidden="true" />
         </button>
       </div>
