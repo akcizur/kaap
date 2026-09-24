@@ -29,7 +29,7 @@ Sekundární vlastnosti:
 - jemné borders,
 - velmi malé ikony,
 - omezené radius,
-- metadata v Patrick Hand,
+- metadata v MuseoModerno,
 - krátké mikroanimace,
 - minimum stínů.
 
@@ -117,7 +117,7 @@ Použití:
 - forms,
 - buttons.
 
-### Patrick Hand
+### MuseoModerno
 
 Použití:
 
@@ -128,7 +128,7 @@ Použití:
 - metadata,
 - jemná editorial označení.
 
-Patrick Hand nesmí nahradit běžný body text.
+MuseoModerno nesmí nahradit běžný body text.
 
 ---
 
@@ -187,7 +187,7 @@ Metadata mají být vizuálně sekundární.
 
 Typický pattern:
 
-11px + Patrick Hand + weight 400.
+11px + MuseoModerno + weight 400.
 
 Datum používá extra-small treatment kolem 9px.
 
@@ -713,7 +713,7 @@ Při konfliktu:
     [ ] monochrome
     [ ] 768px discipline
     [ ] Google Sans role
-    [ ] Patrick Hand metadata
+    [ ] MuseoModerno metadata
     [ ] 1px borders
     [ ] small icons
     [ ] visible focus

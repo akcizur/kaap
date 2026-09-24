@@ -1,6 +1,6 @@
 :root {
   --font-sans: "Google Sans", "Google Sans Text", Arial, sans-serif;
-  --font-secondary: "Patrick Hand", cursive;
+  --font-secondary: "MuseoModerno", cursive;
   font-family: var(--font-sans);
   color-scheme: light;
   font-synthesis: none;

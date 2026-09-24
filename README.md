@@ -35,7 +35,7 @@ Hlavní technické části:
 - TypeScript strict,
 - Lucide React,
 - Google Sans,
-- Patrick Hand,
+- MuseoModerno,
 - ruční CSS,
 - GitHub Actions,
 - GitHub Pages.
@@ -478,7 +478,7 @@ Primary font pro:
 - controls,
 - forms.
 
-### Patrick Hand
+### MuseoModerno
 
 Secondary font pro:
 
@@ -488,7 +488,7 @@ Secondary font pro:
 - metadata,
 - editorial notes.
 
-Patrick Hand není alternativní body font. Je to metadata/signature layer.
+MuseoModerno není alternativní body font. Je to metadata/signature layer.
 
 ---
 
@@ -902,7 +902,7 @@ Bez vědomého redesignu zachovej:
 
 - 768px content column,
 - monochromatickou paletu,
-- Google Sans + Patrick Hand,
+- Google Sans + MuseoModerno,
 - 56px header,
 - contextual subbar,
 - malé ikony,
