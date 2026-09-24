@@ -4,7 +4,11 @@ import { ModeButton } from './components/ModeButton'
 import { PostCard } from './components/PostCard'
 import { SettingsModal } from './components/SettingsModal'
 import { posts } from './data/posts'
-import { VIEW_MODES, type ViewMode } from './config/viewModes'
+import {
+  VIEW_MODES,
+  VIEW_MODE_ORDER,
+  type ViewMode,
+} from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
 
 export default function App() {
@@ -17,6 +21,14 @@ export default function App() {
   const isDark = theme === 'dark'
   const currentMode = VIEW_MODES[viewMode]
   const ThemeIcon = isDark ? Sun : Moon
+
+  const currentViewIndex = VIEW_MODE_ORDER.indexOf(viewMode)
+  const nextViewMode =
+    VIEW_MODE_ORDER[(currentViewIndex + 1) % VIEW_MODE_ORDER.length]
+
+  function handleViewModeChange() {
+    updatePreference('viewMode', nextViewMode)
+  }
 
   function handleSubscribe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -31,16 +43,13 @@ export default function App() {
 
           <div className="header-actions">
             <div className="view-switcher" role="group" aria-label="View mode">
-              {(Object.keys(VIEW_MODES) as ViewMode[]).map(mode => (
-                <ModeButton
-                  key={mode}
-                  mode={mode}
-                  icon={VIEW_MODES[mode].icon}
-                  label={VIEW_MODES[mode].label}
-                  active={viewMode === mode}
-                  onClick={() => updatePreference('viewMode', mode)}
-                />
-              ))}
+              <ModeButton
+                mode={viewMode}
+                icon={currentMode.icon}
+                currentLabel={currentMode.label}
+                nextLabel={VIEW_MODES[nextViewMode].label}
+                onClick={handleViewModeChange}
+              />
             </div>
 
             <button
