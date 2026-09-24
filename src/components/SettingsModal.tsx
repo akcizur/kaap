@@ -29,7 +29,9 @@ export function SettingsModal({
       >
         <div className="settings-header">
           <h3 id="settings-title">Display Settings</h3>
-          <button className="modal-close" onClick={onClose} aria-label="Close settings">✕</button>
+          <button className="modal-close" onClick={onClose} aria-label="Close settings">
+            ✕
+          </button>
         </div>
 
         <div className="settings-section">
@@ -38,7 +40,7 @@ export function SettingsModal({
             {(Object.keys(VIEW_MODES) as ViewMode[]).map(mode => (
               <button
                 key={mode}
-                className={\`setting-button\${viewMode === mode ? ' is-active' : ''}\`}
+                className={`setting-button${viewMode === mode ? ' is-active' : ''}`}
                 onClick={() => onViewModeChange(mode)}
                 aria-pressed={viewMode === mode}
               >
@@ -54,7 +56,7 @@ export function SettingsModal({
             {(['light', 'dark'] as Theme[]).map(option => (
               <button
                 key={option}
-                className={\`setting-button\${theme === option ? ' is-active' : ''}\`}
+                className={`setting-button${theme === option ? ' is-active' : ''}`}
                 onClick={() => onThemeChange(option)}
                 aria-pressed={theme === option}
               >
@@ -64,7 +66,9 @@ export function SettingsModal({
           </div>
         </div>
 
-        <button className="done-button" onClick={onClose}>Done</button>
+        <button className="done-button" onClick={onClose}>
+          Done
+        </button>
       </div>
     </div>
   )
