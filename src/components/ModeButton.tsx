@@ -18,13 +18,14 @@ export function ModeButton({
 }: ModeButtonProps) {
   return (
     <button
-      className="mode-button"
+      className="nav-button nav-mode-button"
       data-mode={mode}
       onClick={onClick}
       title={currentLabel + ' view · click for ' + nextLabel}
       aria-label={currentLabel + ' view · click to switch to ' + nextLabel}
     >
-      <Icon className="ui-icon" size={16} strokeWidth={2} aria-hidden="true" />
+      <Icon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+      <span className="nav-mode-label">{currentLabel}</span>
     </button>
   )
 }
