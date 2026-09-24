@@ -23,7 +23,10 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
 
   if (mode === 'magazine') {
     return (
-      <article className={\`\${articleClassName}\${index === 0 ? ' is-featured' : ''}\`} tabIndex={0}>
+      <article
+        className={`${articleClassName}${index === 0 ? ' is-featured' : ''}`}
+        tabIndex={0}
+      >
         <div className="post-kicker">{post.category} · {post.date}</div>
         <h4>{post.title}</h4>
         {index === 0 && <p>{post.excerpt}</p>}
