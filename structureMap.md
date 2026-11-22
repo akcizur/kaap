@@ -2,811 +2,193 @@
 
 ## 1. Účel
 
-Toto je technická mapa Dimple / KAAP.
-
-Definuje:
-
-- file ownership,
-- dependency flow,
-- state ownership,
-- data flow,
-- routing,
-- styling,
-- deployment,
-- bezpečná místa pro rozšíření.
-
----
+Technická mapa aktuální implementace Dimple / KAAP. Popisuje existující soubory a skutečné datové toky; neplánované komponenty se zde neuvádějí jako hotové.
 
 ## 2. Root tree
 
-    kaap/
-    ├── .github/
-    │   └── workflows/
-    │       └── deploy-pages.yml
-    ├── public/
-    │   ├── .nojekyll
-    │   └── styles.css
-    ├── src/
-    │   ├── App.tsx
-    │   ├── components/
-    │   │   ├── ModeButton.tsx
-    │   │   ├── PostCard.tsx
-    │   │   └── PostPage.tsx
-    │   ├── config/
-    │   │   └── viewModes.ts
-    │   ├── data/
-    │   │   └── posts.ts
-    │   ├── hooks/
-    │   │   └── usePreferences.ts
-    │   ├── main.tsx
-    │   └── vite-env.d.ts
-    ├── .gitignore
-    ├── README.md
-    ├── index.html
-    ├── package.json
-    ├── tsconfig.json
-    └── vite.config.ts
+```text
+kaap/
+├── .github/workflows/deploy-pages.yml
+├── public/
+│   ├── .nojekyll
+│   └── styles.css
+├── src/
+│   ├── components/
+│   │   ├── PostCard.tsx
+│   │   └── PostPage.tsx
+│   ├── config/viewModes.ts
+│   ├── data/posts.ts
+│   ├── hooks/usePreferences.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── designRules.md
+├── index.html
+├── package.json
+├── README.md
+├── tsconfig.json
+└── vite.config.ts
+```
 
----
-
-## 3. Ownership map
+## 3. Ownership
 
 | Soubor | Odpovědnost |
 |---|---|
-| index.html | HTML shell + metadata |
-| main.tsx | React bootstrap |
-| App.tsx | orchestrace + state + direct navbar controls |
-| PostCard.tsx | post presentation |
-| PostPage.tsx | detail presentation |
-| ModeButton.tsx | reusable mode control |
-| viewModes.ts | mode configuration |
-| posts.ts | content data |
-| usePreferences.ts | theme/view persistence |
-| styles.css | visual system |
-| vite.config.ts | build + base path |
-| deploy-pages.yml | CI/CD |
+| `index.html` | HTML shell, základní metadata a načtení aplikace |
+| `src/main.tsx` | fonty a React bootstrap |
+| `src/App.tsx` | kompozice stránky, search, výběr článku a navbar controls |
+| `src/components/PostCard.tsx` | prezentace položky v jednom ze čtyř layoutů |
+| `src/components/PostPage.tsx` | detail článku |
+| `src/config/viewModes.ts` | pořadí, ikony, popisky a CSS třídy layoutů |
+| `src/data/posts.ts` | statická data šesti článků a typ Post |
+| `src/hooks/usePreferences.ts` | theme a viewMode v React state + localStorage |
+| `public/styles.css` | globální CSS, tokeny, komponenty a responsive pravidla |
+| `vite.config.ts` | React plugin a GitHub Pages base path |
+| `.github/workflows/deploy-pages.yml` | build a deployment na GitHub Pages |
 
----
+## 4. Dependency flow
 
-## 4. Dependency graph
+```text
+index.html
+  └── src/main.tsx
+       └── src/App.tsx
+            ├── src/data/posts.ts
+            ├── src/config/viewModes.ts
+            ├── src/hooks/usePreferences.ts
+            ├── components/PostCard.tsx
+            └── components/PostPage.tsx
+```
 
-    index.html
-       ↓
-    src/main.tsx
-       ↓
-    src/App.tsx
-       ├── src/data/posts.ts
-       ├── src/config/viewModes.ts
-       ├── src/hooks/usePreferences.ts
-       ├── components/PostCard.tsx
-       └── components/PostPage.tsx
+Globální stylesheet `public/styles.css` se načítá z HTML shellu; není importován jako CSS modul v React stromu.
 
-CSS flow:
+## 5. App state
 
-    index.html
-       ↓
-    public/styles.css
-       ↓
-    global classes + CSS variables
-       ↓
-    rendered React DOM
+`App.tsx` vlastní:
+- `searchOpen`
+- `searchQuery`
+- `selectedPostId`
 
-styles.css není JS module dependency. Je připojen jako veřejný stylesheet.
+`usePreferences()` vlastní:
+- `theme`
+- `viewMode`
 
----
-
-## 5. App state map
+Odvozené hodnoty:
+- `selectedPost` — dohledání postu podle ID
+- `filteredPosts` — klientský filtr datasetu
 
-App.tsx vlastní:
+Newsletter nemá stav přihlášení ani submit handler. UI výslovně informuje, že integrace zatím není připojena.
 
-    email
-    subscribed
-    language
-    scale
-    searchOpen
-    searchOpen
-    searchQuery
-    selectedPostId
+## 6. Preferences a persistence
 
-usePreferences vlastní:
+Storage keys:
+- `dimple-theme`
+- `dimple-view`
 
-    theme
-    viewMode
+Theme se inicializuje z validní hodnoty localStorage, jinak z `prefers-color-scheme`, s fallbackem na light. View mode se načítá pouze tehdy, pokud odpovídá klíči v `VIEW_MODES`; fallback je list.
 
-Derived:
+Zápis do localStorage probíhá v efektu hooku po změně preferences.
 
-    selectedPost
-    filteredPosts
+## 7. Post data
 
----
+Aktuální typ:
 
-## 6. Persistence map
+```ts
+type Post = {
+  id: number
+  title: string
+  excerpt: string
+  category: string
+  date: string
+  readTime: string
+}
+```
 
-    App.tsx
-       ↓
-    usePreferences()
-       ↓
-    React state
-       ↓
-    useEffect
-       ↓
-    localStorage
+Dataset je statický v `src/data/posts.ts` a obsahuje šest položek. Neobsahuje slug, tagy ani plný obsah článku.
 
-Keys:
+## 8. View modes
 
-    dimple-theme
-    dimple-view
+`src/config/viewModes.ts` definuje pořadí:
+1. list
+2. grid
+3. magazine
+4. compact
 
-Pouze theme a viewMode jsou dnes persistentní.
+Konfigurace poskytuje ikonu, label, wrapper class a className karty. `App.tsx` nyní používá `VIEW_MODES[viewMode].containerClass` přímo na wrapperu seznamu; wrapper a prezentační režim karty tak sdílejí stejný zdroj konfigurace.
 
----
+## 9. Search
 
-## 7. Initial preference flow
+Search je synchronní klientský filtr nad:
+- title
+- excerpt
+- category
+- date
 
-Theme:
+Query se trimuje a převádí na lowercase. Neprohledává full text článku, protože dataset zatím žádný full text nemá. Česká diakritika zatím není normalizována.
 
-    localStorage
-       ↓
-    prefers-color-scheme
-       ↓
-    light
+## 10. Routing
 
-View mode:
+Detail používá query parametr:
 
-    localStorage
-       ↓
-    validate against VIEW_MODES
-       ↓
-    list
+```text
+/kaap/?post=1
+```
 
----
+Při inicializaci aplikace se ID načte z `window.location.search`. Karty jsou běžné anchor odkazy a back link vede na listing. `App.tsx` poslouchá `popstate` a při browser history změně synchronizuje vybrané ID.
 
-## 8. Post data flow
-
-    src/data/posts.ts
-             ↓
-          App.tsx
-          /      \
-         /        \
-    filter       resolve
-      ↓             ↓
-    PostCard      PostPage
-
-PostCard dostává Post přes props.
-
-PostPage dostává jediný vybraný Post přes props.
-
-Není použit globální content store.
-
----
-
-## 9. Search flow
-
-    search input
-        ↓
-    searchQuery
-        ↓
-    useMemo
-        ↓
-    posts.filter
-        ↓
-    title + excerpt + category + date
-        ↓
-    filteredPosts
-        ↓
-    PostCard[]
-
-Search je synchronní klientský filtr.
-
----
-
-## 10. Routing flow
-
-Použit je query-param routing:
-
-    ?post=1
-
-Inicializace:
-
-    window.location.search
-          ↓
-    URLSearchParams
-          ↓
-    post value
-          ↓
-    Number
-          ↓
-    selectedPostId
-          ↓
-    posts.find
-          ↓
-    selectedPost
-
-Render:
-
-    selectedPost?
-       ├── yes → PostPage
-       └── no  → listing
-
-Browser history:
-
-    popstate
-      ↓
-    syncPost()
-      ↓
-    selectedPostId
-
----
-
-## 11. Navigation state
-
-Navbar má tři přímé controls:
-
-    layout
-    theme
-    search
-
-Stav:
-
-    searchOpen
-    searchQuery
-
-Layout a Theme nemají open state.
-
-### Layout
-
-Kliknutí:
-
-    current viewMode
-        ↓
-    next viewMode
-        ↓
-    PostCard
-
-### Theme
-
-Kliknutí:
-
-    light ↔ dark
-        ↓
-    data-theme
-        ↓
-    CSS tokens
-
-### Search
-
-Kliknutí:
-
-    searchOpen
-        ↓
-    nav-panel--search
-        ↓
-    searchQuery
-        ↓
-    filteredPosts
-
-Search panel je overlay pod 56px navbarem a neovlivňuje layout flow.
-
-Neexistuje Settings menu, subnavbar, Language button ani Scale button.
-
-## 13. View mode graph
-
-    viewModes.ts
-       ├── ViewMode type
-       ├── VIEW_MODE_ORDER
-       └── VIEW_MODES
-             ↓
-        App.tsx
-        PostCard.tsx
-        usePreferences.ts
-
-PostCard renderuje mode-specific markup.
-
----
-
-## 14. View mode expansion
-
-Při přidání nového view mode:
-
-1. ViewMode union,
-2. VIEW_MODE_ORDER,
-3. VIEW_MODES,
-4. navbar control,
-5. PostCard branch,
-6. CSS.
-
-Současná architektura používá explicitní větvení. Pro čtyři režimy je to čitelné a levné na údržbu.
-
----
-
-## 15. Component coupling
-
-### App.tsx
-
-Nejvyšší coupling.
-
-Je legitimní orchestration root, ale při růstu může být potřeba rozdělení.
-
-### PostCard.tsx
-
-Nízká coupling:
-
-- Post,
-- ViewMode.
-
-### PostPage.tsx
-
-Nízká coupling:
-
-- Post.
-
-### ModeButton.tsx
-
-Malý reusable primitive.
-
-Aktuální App stav jej nepoužívá jako hlavní mode flow.
-
----
-
-## 16. CSS structure
-
-styles.css je globální a lze ho číst v pořadí:
-
-1. root tokens,
-2. dark theme,
-3. global base,
-4. app/header,
-5. navbar panels,
-6. main content,
-7. posts,
-8. newsletter,
-9. footer,
-10. utilities,
-11. post detail,
-12. responsive.
-
-Design rules pro tento stylesheet jsou v designRules.md.
-
----
-
-## 17. Theme graph
-
-    data-theme
-       ↓
-    CSS custom properties
-       ↓
-    component styles
-       ↓
-    rendered visual state
-
-Například:
-
-    data-theme=dark
-       ↓
-    --bg = #0a0a0a
-       ↓
-    .app background
-       ↓
-    page dark state
-
-Komponenty nemají samostatné light/dark stylesheety.
-
----
-
-## 18. Fixed navbar invariant
-
-Navbar má pevnou výšku 56px.
-
-Search overlay je absolutně pozicovaný pod navbarem a neovlivňuje layout flow.
-
-## 19. Footer links
-
-Externí odkazy jsou pouze ve footeru:
-
-    website
-    mail
-    github
-
-Nejsou součástí hlavní navbarové interakce.
-## 20. Newsletter flow
-
-    email state
-       ↓
-    form submit
-       ↓
-    setSubscribed(true)
-       ↓
-    success UI
-
-Žádná data persistence ani API.
-
----
-
-## 21. Build graph
-
-    source
-      ↓
-    Vite
-      ├── React transform
-      ├── TypeScript/JS bundling
-      └── static asset handling
-      ↓
-    dist/
-
-public/.nojekyll → dist/.nojekyll  
-public/styles.css → dist/styles.css
-
----
-
-## 22. GitHub Pages graph
-
-    push main
-       ↓
-    Actions
-       ↓
-    checkout
-       ↓
-    Node 22
-       ↓
-    npm install
-       ↓
-    npm run build
-       ↓
-    dist
-       ↓
-    upload-pages-artifact
-       ↓
-    deploy-pages
-       ↓
-    GitHub Pages
-
----
-
-## 23. Base path graph
-
-    VITE_BASE_PATH
-          ↓
-    explicit override
-          ↓
-    otherwise
-    GITHUB_ACTIONS
-          ↓
-    GITHUB_REPOSITORY
-          ↓
-    /repository-name/
-
-Lokální výchozí base:
-
-/
-
-Pro aktuální repository:
-
-/kaap/
-
----
-
-## 24. Directory ownership rules
-
-### src/data
-
-Only content data.
-
-### src/config
-
-Reusable configuration metadata.
-
-### src/hooks
-
-State abstraction and persistence.
-
-### src/components
-
-Presentation/UI behavior.
-
-### src/App.tsx
-
-Cross-feature orchestration.
-
-### public
-
-Static publicly served assets.
-
-### .github/workflows
-
-Automation.
-
----
-
-## 25. Adding a post
-
-Místo:
-
-src/data/posts.ts
-
-Potřebuje:
-
-- unikátní id,
-- title,
-- excerpt,
-- category,
-- date,
-- readTime.
-
-Pořadí pole určuje pořadí listing renderu.
-
----
-
-## 26. Changing the Post model
-
-Změna Post type může ovlivnit:
-
-- posts.ts,
-- App.tsx,
-- PostCard.tsx,
-- PostPage.tsx,
-- search logic.
-
-Při přidání pole vždy zkontroluj, zda má být součástí search indexu a detailu.
-
----
-
-## 27. Adding persistent preference
-
-Persistentní preference patří do usePreferences.ts.
-
-Nedělej pouze lokální useState v komponentě, pokud má hodnota přežít reload.
-
-Preference boundary:
-
-App ↔ usePreferences ↔ localStorage
-
----
-
-## 28. Adding navigation control
-
-Nová hlavní navigační akce musí mít:
-
-1. nav control v App.tsx,
-2. jasný aktivní state,
-3. keyboard/focus behavior,
-4. odpovídající panel pouze pokud je nutný,
-5. mobile behavior,
-6. případné CSS.
-
-Externí odkazy patří do footeru, ne do hlavního navbaru.
-
----
-
-## 29. Routing growth trigger
-
-Současný query-param model je vhodný pro jednoduchý detail postu.
-
-Pokud přibudou:
-
-- archive,
-- category,
-- tags,
-- authors,
-- search route,
-- multiple content types,
-
-vytvoř explicitní routing layer.
-
-Nepřidávej všechny nové routes do jediného URL parseru v App.tsx.
-
----
-
-## 30. Content growth trigger
-
-Současný Post model je malý:
-
-- id,
-- title,
-- excerpt,
-- category,
-- date,
-- readTime.
-
-Při přidání body:
-
-    Post
-      ├── metadata
-      └── content
-
-PostPage se pak stane plnohodnotným content rendererem.
-
----
-
-## 31. Accessibility boundaries
-
-Accessibility je distribuována podle ownership:
-
-App.tsx:
-
-- aria labels,
-- expanded,
-- focus/search behavior,
-- keyboard behavior.
-
-navbar settings:
-
-- dialog,
-- modal semantics,
-- pressed states.
-
-CSS:
-
-- focus-visible visuals.
-
-Budoucí accessibility opravu dělej u komponenty, která vlastní daný behavior.
-
----
-
-## 32. Safe change zones
-
-Nízké riziko:
-
-- nový post,
-- copy,
-- existující token value,
-- readTime,
-- category.
-
-Střední riziko:
-
-- nový view mode,
-- navbar panel,
-- settings option,
-- PostPage markup.
-
-Vyšší riziko:
-
-- routing,
-- vite base path,
-- CI workflow,
-- global CSS architecture,
-- package manager.
-
----
-
-## 33. Architectural invariants
-
-Bez vědomého redesignu zachovat:
-
-- static-first,
-- local content data,
-- App jako orchestration root,
-- PostCard jako presentation switch,
-- usePreferences jako persistence boundary,
-- query-param detail,
-- global CSS token system,
-- GitHub Pages deployment.
-
----
-
-## 34. Refactor triggers
-
-### Router
-
-Až route count naroste.
-
-### Content service
-
-Až data nebudou lokální.
-
-### App split
-
-Až cross-feature state začne být obtížně čitelný.
-
-### Search index
-
-Až dataset výrazně naroste.
-
-### Design token split
-
-Až se tokens začnou sdílet mezi více stylesheety.
-
----
-
-## 35. Recommended future structure
-
-Při významném růstu je možné použít:
-
-    src/
-    ├── app/
-    │   ├── App.tsx
-    │   └── routing/
-    ├── components/
-    │   ├── navigation/
-    │   ├── posts/
-    │   ├── navigation/
-    │   └── newsletter/
-    ├── config/
-    ├── content/
-    ├── hooks/
-    ├── lib/
-    └── styles/
-
-Pro současnou velikost projektu by tento split byl zbytečná abstrakce.
-
----
-
-## 36. Feature matrix
-
-| Feature | App | Component | Data | Hook | Config | CSS |
-|---|---:|---:|---:|---:|---:|---:|
-| listing | ✓ | ✓ | ✓ |  | ✓ | ✓ |
-| detail | ✓ | ✓ | ✓ |  |  | ✓ |
-| search | ✓ |  | ✓ |  |  | ✓ |
-| theme | ✓ | ✓ |  | ✓ |  | ✓ |
-| view mode | ✓ | ✓ |  | ✓ | ✓ | ✓ |
-| settings | ✓ |  |  | ✓ | ✓ | ✓ |
-| navbar panel | ✓ |  |  |  |  | ✓ |
-
-| newsletter | ✓ |  |  |  |  | ✓ |
-| Pages deployment |  |  |  |  |  |  |
-
----
-
-## 37. Change propagation
-
-### Theme token změna
-
-styles.css
-  ↓
-token
-  ↓
-všechny classes používající var()
-
-### Post model změna
-
-posts.ts
-  ↓
-App
-  ↓
-PostCard
-  ↓
-PostPage
-  ↓
-search
-
-### View mode změna
-
-viewModes.ts
-  ↓
-navbar settings
-  ↓
-App
-  ↓
-PostCard
-  ↓
-CSS
-
----
-
-## 38. Final rule
-
-Při přidávání nové věci se ptej:
-
-    je to data?
-      → src/data
-
-    je to config?
-      → src/config
-
-    je to persistentní preference?
-      → src/hooks
-
-    je to presentation?
-      → src/components
-
-    je to cross-feature orchestrace?
-      → src/App.tsx
-
-    je to visual system?
-      → public/styles.css
-
-    je to build/deploy?
-      → vite.config.ts / workflow
-
-To je základní structure map projektu.
+Nejde o clean-slug routing ani o staticky generované HTML jednotlivých článků.
+
+## 11. Newsletter
+
+Newsletter provider ani backend nejsou nakonfigurovány. Formulář a simulovaný success stav byly odstraněny. Aktuální sekce pouze transparentně oznamuje, že email subscription není připojeno.
+
+## 12. CSS
+
+Jediný globální stylesheet je `public/styles.css`. Obsahuje:
+- light/dark CSS variables,
+- base styles,
+- header a search panel,
+- hero a post listing,
+- čtyři layouty,
+- newsletter a footer,
+- detail článku,
+- responsive pravidla.
+
+## 13. Build a deployment
+
+`vite.config.ts` vybírá base path v pořadí:
+1. `VITE_BASE_PATH`
+2. `GITHUB_ACTIONS` + název repozitáře
+3. lokální `/`
+
+GitHub Actions workflow reaguje na push do `main` a ruční spuštění. Používá Node 22, `npm install`, `npm run build`, upload `dist` a deploy GitHub Pages.
+
+## 14. Aktuální limity
+
+- Obsah je statický TypeScript dataset.
+- Detail zobrazuje metadata a excerpt, nikoli plný článek.
+- Search neprohledává body článku ani tagy.
+- Routing používá `?post=id`.
+- Newsletter není připojen ke službě.
+- CSS zůstává globální.
+- Tailwind balíčky jsou v dependencies, ale nejsou aktivovány ve Vite konfiguraci.
+- Automatické testy a samostatný typecheck script zatím nejsou součástí package scripts.
+
+## 15. Bezpečná místa pro změny
+
+| Potřeba | Místo |
+|---|---|
+| přidání článku | `src/data/posts.ts` |
+| změna datového modelu | `src/data/posts.ts` + consumers |
+| nový layout | `src/config/viewModes.ts`, `PostCard.tsx`, CSS |
+| theme token | `public/styles.css` |
+| navbar/search | `src/App.tsx` |
+| persistent preference | `src/hooks/usePreferences.ts` |
+| detail článku | `src/components/PostPage.tsx` |
+| base path | `vite.config.ts` |
+| deployment | `.github/workflows/deploy-pages.yml` |
+
+## 16. Dokumentační source of truth
+
+- `README.md` — účel, stack a provoz projektu
+- `designRules.md` — vizuální pravidla
+- `structureMap.md` — skutečná technická struktura a datové toky

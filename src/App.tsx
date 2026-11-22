@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import {
   Globe2,
   Mail,
@@ -15,8 +15,6 @@ import { usePreferences } from './hooks/usePreferences'
 
 export default function App() {
   const { preferences, updatePreference } = usePreferences()
-  const [email, setEmail] = useState('')
-  const [subscribed, setSubscribed] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -86,11 +84,6 @@ export default function App() {
 
   function handleThemeToggle() {
     updatePreference('theme', theme === 'light' ? 'dark' : 'light')
-  }
-
-  function handleSubscribe(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (email.trim()) setSubscribed(true)
   }
 
   return (
@@ -198,7 +191,7 @@ export default function App() {
             </span>
           </div>
 
-          <div className="posts posts-list">
+          <div className={VIEW_MODES[viewMode].containerClass}>
             {filteredPosts.map((post, index) => (
               <PostCard
                 key={post.id}
@@ -219,34 +212,10 @@ export default function App() {
           )}
 
           <section className="newsletter">
-            {subscribed ? (
-              <div className="subscription-success">
-                <div className="success-icon">✓</div>
-                <div className="success-title">You're subscribed.</div>
-                <p>First issue lands next Thursday.</p>
-              </div>
-            ) : (
-              <>
-                <div className="newsletter-copy">
-                  <h3>Get it in your inbox</h3>
-                  <p>One email per week. No noise, no sponsors, no paywalls.</p>
-                </div>
-                <form onSubmit={handleSubscribe} className="subscribe-form">
-                  <input
-                    className="email-input"
-                    type="email"
-                    value={email}
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.target.value)}
-                    placeholder="your@email.com"
-                    required
-                    aria-label="Email address"
-                  />
-                  <button type="submit" className="subscribe-button" title="Subscribe" aria-label="Subscribe">
-                    <Mail className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-                  </button>
-                </form>
-              </>
-            )}
+            <div className="newsletter-copy">
+              <h3>Get it in your inbox</h3>
+              <p>Email subscriptions are not connected yet. This section will be activated when a real mailing service is configured.</p>
+            </div>
           </section>
         </main>
       )}

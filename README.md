@@ -129,7 +129,7 @@ Mentální model:
                 ↓
         public/styles.css
 
-App.tsx je hlavní orchestrátor. Prezentační komponenty jsou malé a přijímají data přes props.
+App.tsx je hlavní orchestrátor. Prezentační komponenty jsou malé a přijímají data přes props. Newsletter zatím pouze transparentně oznamuje, že integrace není připojena.
 
 ---
 
@@ -206,8 +206,6 @@ Vlastní zejména:
 
 ### State
 
-- email,
-- subscribed,
 - searchOpen,
 - searchQuery,
 - selectedPostId.
@@ -232,7 +230,7 @@ Preferences:
 - přepnutí Layout,
 - přepnutí Theme,
 - otevření Search overlay,
-- subscribe.
+- layout, theme a search controls.
 
 ---
 
@@ -311,7 +309,7 @@ Je řízen propem mode.
 - date,
 - truncation.
 
-Každý post je anchor s query parametrem ?post=<id>.
+Každý post je anchor s query parametrem ?post=<id>. Wrapper seznamu používá `VIEW_MODES[viewMode].containerClass`, takže jeho CSS layout odpovídá právě zvolenému režimu.
 
 ---
 
@@ -597,17 +595,7 @@ Newsletter je front-end demonstrace.
 
 Flow:
 
-    email
-      ↓
-    native email validation
-      ↓
-    submit
-      ↓
-    setSubscribed(true)
-      ↓
-    success UI
-
-Neodesílá se žádný request.
+Newsletter je pouze informační sekce. Formulář a simulovaný success stav byly odstraněny, aby UI netvrdilo, že proběhlo přihlášení, které ve skutečnosti nikam neodesílá.
 
 Neexistuje:
 
