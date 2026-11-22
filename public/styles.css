@@ -334,6 +334,19 @@ article:focus-visible {
   gap: 36px;
 }
 
+/* Grid view: separate cards into a clear, evenly spaced layout. */
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
+}
+
+.posts-grid .post-link {
+  min-width: 0;
+  height: 100%;
+}
+
 .post-link {
   display: block;
   color: inherit;
@@ -398,7 +411,11 @@ article:focus-visible {
 }
 
 .post-grid {
-  padding: 20px;
+  display: flex;
+  min-height: 220px;
+  height: 100%;
+  flex-direction: column;
+  padding: 22px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
@@ -434,6 +451,11 @@ article:focus-visible {
   color: var(--text-soft);
   font-size: 12px;
   line-height: 1.65;
+}
+
+.post-grid .post-date {
+  margin-top: auto;
+  padding-top: 18px;
 }
 
 .post-date,
@@ -810,6 +832,17 @@ article:focus-visible {
 
   .header-actions::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .posts-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .post-grid {
+    min-height: 0;
   }
 }
 
