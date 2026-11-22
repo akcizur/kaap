@@ -87,7 +87,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" data-theme={theme}>
+    <div className="app">
       <header className="site-header">
         <div className="header-inner">
           <span className="brand">Dimple</span>
