@@ -1494,10 +1494,10 @@ a:focus-visible {
 
 /* Soft emboss — the source sample's close highlight / offset shade stack. */
 :root {
-  --emboss-light: rgba(255, 255, 255, .19);
-  --emboss-light-soft: rgba(255, 255, 255, .075);
+  --emboss-light: rgba(255, 255, 255, .24);
+  --emboss-light-soft: rgba(255, 255, 255, .09);
   --emboss-shade: rgba(0, 0, 0, .34);
-  --emboss-shade-soft: rgba(0, 0, 0, .19);
+  --emboss-shade-soft: rgba(0, 0, 0, .20);
   --emboss-header-ink: #f5f6f8;
   --emboss-glass-ink: #fafbfc;
 }
@@ -1509,11 +1509,13 @@ a:focus-visible {
 
 .soft-emboss {
   color: var(--emboss-ink);
+  -webkit-text-stroke: .6px color-mix(in srgb, currentColor 76%, var(--bg));
+  paint-order: stroke fill;
   text-shadow:
-    -.65px -.7px .65px var(--emboss-light),
-    -1.7px -1.9px 2.8px var(--emboss-light-soft),
-    .65px .75px .7px rgba(0, 0, 0, .20),
-    1.7px 1.9px 2.7px var(--emboss-shade-soft),
+    -.8px -.85px .8px var(--emboss-light),
+    -1.8px -2px 2.8px var(--emboss-light-soft),
+    .8px .9px .8px rgba(0, 0, 0, .22),
+    1.9px 2px 2.8px var(--emboss-shade-soft),
     3.7px 4.2px 7.5px var(--emboss-shade);
 }
 
@@ -1522,7 +1524,8 @@ a:focus-visible {
 }
 
 .soft-emboss--canvas {
-  --emboss-ink: var(--bg);
+  /* Keep the glyphs filled; embossing is a surface treatment, not a cut-out. */
+  --emboss-ink: var(--text);
 }
 
 .soft-emboss--glass {
