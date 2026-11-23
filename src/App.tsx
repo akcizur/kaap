@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type AnimationEvent as ReactAnimationEvent } from 'react'
 import {
   Globe2,
   Mail,
@@ -24,6 +24,72 @@ export default function App() {
     return Number.isInteger(id) && id > 0 ? id : null
   })
 
+  const [pagePhase, setPagePhase] = useState<'idle' | 'exit' | 'enter'>('idle')
+  const pagePhaseRef = useRef<'idle' | 'exit' | 'enter'>('idle')
+  const pendingPostIdRef = useRef<number | null>(null)
+
+  function setTransitionPhase(phase: 'idle' | 'exit' | 'enter') {
+    pagePhaseRef.current = phase
+    setPagePhase(phase)
+  }
+
+  function transitionToPost(nextPostId: number | null) {
+    const currentTarget = pagePhaseRef.current === 'exit'
+      ? pendingPostIdRef.current
+      : selectedPostId
+
+    if (nextPostId === currentTarget) return
+
+    pendingPostIdRef.current = nextPostId
+    setTransitionPhase('exit')
+  }
+
+  function handleAppClick(event: ReactMouseEvent<HTMLDivElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return
+
+    const target = event.target
+    if (!(target instanceof Element)) return
+
+    const link = target.closest<HTMLAnchorElement>('a[href]')
+    if (!link || link.target === '_blank' || link.hasAttribute('download')) return
+
+    const destination = new URL(link.href, window.location.href)
+    if (
+      destination.origin !== window.location.origin ||
+      destination.pathname !== window.location.pathname
+    ) return
+
+    const value = destination.searchParams.get('post')
+    const id = value ? Number(value) : NaN
+    const nextPostId = Number.isInteger(id) && id > 0 ? id : null
+
+    event.preventDefault()
+    window.history.pushState({}, '', destination.pathname + destination.search + destination.hash)
+    transitionToPost(nextPostId)
+  }
+
+  function handlePageAnimationEnd(event: ReactAnimationEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return
+
+    if (pagePhaseRef.current === 'exit') {
+      setSelectedPostId(pendingPostIdRef.current)
+      window.scrollTo(0, 0)
+      setTransitionPhase('enter')
+      return
+    }
+
+    if (pagePhaseRef.current === 'enter') {
+      setTransitionPhase('idle')
+    }
+  }
+
   const { theme, viewMode } = preferences
 
   const selectedPost = selectedPostId
@@ -46,11 +112,11 @@ export default function App() {
     const syncPost = () => {
       const value = new URLSearchParams(window.location.search).get('post')
       const id = value ? Number(value) : NaN
-      setSelectedPostId(Number.isInteger(id) && id > 0 ? id : null)
+      transitionToPost(Number.isInteger(id) && id > 0 ? id : null)
     }
     window.addEventListener('popstate', syncPost)
     return () => window.removeEventListener('popstate', syncPost)
-  }, [])
+  }, [selectedPostId])
 
   useEffect(() => {
     if (!searchOpen) return
@@ -87,7 +153,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className="app" onClick={handleAppClick}>
       <header className="site-header">
         <div className="header-inner">
           <span className="brand">Dimple</span>
@@ -168,6 +234,10 @@ export default function App() {
         )}
       </header>
 
+      <div
+        className={`page-transition${pagePhase === 'exit' ? ' is-exiting' : pagePhase === 'enter' ? ' is-entering' : ''}`}
+        onAnimationEnd={handlePageAnimationEnd}
+      >
       {selectedPost ? (
         <PostPage post={selectedPost} />
       ) : (
@@ -219,6 +289,7 @@ export default function App() {
           </section>
         </main>
       )}
+      </div>
 
       <footer className="site-footer">
         <div className="footer-inner">
