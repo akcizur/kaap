@@ -1490,3 +1490,41 @@ a:focus-visible {
     animation-duration: .01ms !important;
   }
 }
+
+
+/* Soft emboss — the source sample's close highlight / offset shade stack. */
+:root {
+  --emboss-light: rgba(255, 255, 255, .19);
+  --emboss-light-soft: rgba(255, 255, 255, .075);
+  --emboss-shade: rgba(0, 0, 0, .34);
+  --emboss-shade-soft: rgba(0, 0, 0, .19);
+  --emboss-header-ink: #f5f6f8;
+  --emboss-glass-ink: #fafbfc;
+}
+
+:root[data-theme='dark'] {
+  --emboss-header-ink: #0c0e11;
+  --emboss-glass-ink: #15171c;
+}
+
+.soft-emboss {
+  color: var(--emboss-ink);
+  text-shadow:
+    -.65px -.7px .65px var(--emboss-light),
+    -1.7px -1.9px 2.8px var(--emboss-light-soft),
+    .65px .75px .7px rgba(0, 0, 0, .20),
+    1.7px 1.9px 2.7px var(--emboss-shade-soft),
+    3.7px 4.2px 7.5px var(--emboss-shade);
+}
+
+.soft-emboss--header {
+  --emboss-ink: var(--emboss-header-ink);
+}
+
+.soft-emboss--canvas {
+  --emboss-ink: var(--bg);
+}
+
+.soft-emboss--glass {
+  --emboss-ink: var(--emboss-glass-ink);
+}
