@@ -146,8 +146,8 @@ export default function App() {
     page.style.visibility = ''
 
     const pageTiming: KeyframeAnimationOptions = {
-      duration: 880,
-      easing: 'cubic-bezier(.22, .72, .18, 1)',
+      duration: direction === 'back' ? 700 : 760,
+      easing: 'cubic-bezier(.2, .82, .2, 1)',
       fill: 'both',
     }
 
@@ -171,20 +171,22 @@ export default function App() {
 
     // Cap the stagger so very long lists do not leave the last cards waiting
     // several seconds. The first items remain clearly sequenced.
-    const itemAnimations = transitionItems.map((item, index) =>
-      item.animate(
+    const itemAnimations = transitionItems.map((item, index) => {
+      const isBackControl = item.classList.contains('back-link')
+
+      return item.animate(
         [
-          { opacity: 0, transform: 'translate3d(0, 14px, 0)' },
+          { opacity: 0, transform: 'translate3d(0, 10px, 0)' },
           { opacity: 1, transform: 'translate3d(0, 0, 0)' },
         ],
         {
-          duration: 580,
-          delay: 100 + Math.min(index, 12) * 48,
-          easing: 'cubic-bezier(.2, .72, .25, 1)',
+          duration: isBackControl ? 420 : 500,
+          delay: isBackControl ? 55 : 70 + Math.min(index, 8) * 34,
+          easing: 'cubic-bezier(.2, .78, .2, 1)',
           fill: 'both',
         },
-      ),
-    )
+      )
+    })
 
     activePageAnimationsRef.current = [
       outgoingAnimation,
@@ -207,8 +209,8 @@ export default function App() {
     const edgeFadeAnimation = previousPage.animate(
       [{ opacity: .94 }, { opacity: 0 }],
       {
-        duration: 240,
-        easing: 'ease-out',
+        duration: 180,
+        easing: 'cubic-bezier(.2, .7, .2, 1)',
         fill: 'forwards',
       },
     )
