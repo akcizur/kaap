@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   Globe2,
   Mail,
@@ -224,6 +224,20 @@ export default function App() {
     clearActivePageTransition()
   }
 
+  function handleGlowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== 'mouse') return
+
+    const target = event.target
+    if (!(target instanceof Element)) return
+
+    const control = target.closest<HTMLElement>('[data-glow="true"]')
+    if (!control) return
+
+    const bounds = control.getBoundingClientRect()
+    control.style.setProperty('--glow-x', (event.clientX - bounds.left) + 'px')
+    control.style.setProperty('--glow-y', (event.clientY - bounds.top) + 'px')
+  }
+
   function handleAppClick(event: ReactMouseEvent<HTMLDivElement>) {
     if (
       event.defaultPrevented ||
@@ -370,7 +384,7 @@ export default function App() {
   }
 
   return (
-    <div className="app" onClick={handleAppClick}>
+    <div className="app" onClick={handleAppClick} onPointerMove={handleGlowPointerMove}>
       <header className="site-header">
         <div className="header-inner">
           <span className="brand soft-emboss soft-emboss--header">Dimple</span>
@@ -378,7 +392,7 @@ export default function App() {
           <nav className="header-actions" aria-label="Site controls">
             <button
               type="button"
-              className="nav-button"
+              className="nav-button" data-glow="true"
               onClick={handleLayoutToggle}
               title={`Layout: ${VIEW_MODES[viewMode].label}`}
               aria-label={`Change layout. Current: ${VIEW_MODES[viewMode].label}`}
@@ -391,7 +405,7 @@ export default function App() {
 
             <button
               type="button"
-              className="nav-button"
+              className="nav-button" data-glow="true"
               onClick={handleThemeToggle}
               title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
               aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
@@ -405,7 +419,7 @@ export default function App() {
 
             <button
               type="button"
-              className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`}
+              className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`} data-glow="true"
               onClick={handleSearchToggle}
               title={searchOpen ? 'Close search' : 'Search'}
               aria-label={searchOpen ? 'Close search' : 'Search'}
@@ -438,7 +452,7 @@ export default function App() {
                 {searchQuery && (
                   <button
                     type="button"
-                    className="nav-search-clear"
+                    className="nav-search-clear" data-glow="true"
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search"
                   >
@@ -521,7 +535,7 @@ export default function App() {
 
           <nav className="footer-links" aria-label="External links">
             <a
-              className="footer-icon-link"
+              className="footer-icon-link" data-glow="true"
               href="https://dimple.blog"
               target="_blank"
               rel="noreferrer"
@@ -532,7 +546,7 @@ export default function App() {
             </a>
 
             <a
-              className="footer-icon-link"
+              className="footer-icon-link" data-glow="true"
               href="mailto:hello@dimple.blog"
               title="Mail"
               aria-label="Send email"
@@ -541,7 +555,7 @@ export default function App() {
             </a>
 
             <a
-              className="footer-icon-link"
+              className="footer-icon-link" data-glow="true"
               href="https://github.com/akcizur/kaap"
               target="_blank"
               rel="noreferrer"
