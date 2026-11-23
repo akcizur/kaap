@@ -273,9 +273,43 @@ article:focus-visible {
   padding: 48px 24px;
 }
 
+.page-stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: clip;
+  isolation: isolate;
+}
+
+.page-previous-layer {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.page-previous-layer > .page-transition__snapshot {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  background: var(--bg);
+  pointer-events: none;
+  user-select: none;
+}
+
 .page-transition {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
+  background: var(--bg);
+  will-change: transform, opacity;
 }
 
 .hero {

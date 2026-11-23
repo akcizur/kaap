@@ -25,11 +25,18 @@ export default function App() {
   })
 
   const pageRef = useRef<HTMLDivElement>(null)
+  const previousPageLayerRef = useRef<HTMLDivElement>(null)
   const selectedPostIdRef = useRef(selectedPostId)
   const navigationTargetRef = useRef(selectedPostId)
   const historyIndexRef = useRef(0)
   const transitionIdRef = useRef(0)
-  const activePageAnimationRef = useRef<Animation | null>(null)
+  const activePageAnimationsRef = useRef<Animation[]>([])
+
+  function clearActivePageTransition() {
+    activePageAnimationsRef.current.forEach(animation => animation.cancel())
+    activePageAnimationsRef.current = []
+    previousPageLayerRef.current?.replaceChildren()
+  }
 
   async function transitionToPost(
     nextPostId: number | null,
@@ -39,13 +46,18 @@ export default function App() {
 
     navigationTargetRef.current = nextPostId
     const transitionId = ++transitionIdRef.current
+    clearActivePageTransition()
+
     const page = pageRef.current
-
-    activePageAnimationRef.current?.cancel()
-    activePageAnimationRef.current = null
-
+    const previousPageLayer = previousPageLayerRef.current
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (!page || typeof page.animate !== 'function' || reduceMotion) {
+
+    if (
+      !page ||
+      !previousPageLayer ||
+      typeof page.animate !== 'function' ||
+      reduceMotion
+    ) {
       selectedPostIdRef.current = nextPostId
       setSelectedPostId(nextPostId)
       window.scrollTo(0, 0)
@@ -55,21 +67,35 @@ export default function App() {
 
     page.style.pointerEvents = 'none'
 
-    const exitX = direction === 'back' ? 28 : -28
-    const enterX = direction === 'back' ? -24 : 24
+    // Keep a non-interactive snapshot underneath the incoming page. It gives
+    // the transition a real second layer instead of fading the whole page out.
+    const previousPage = page.cloneNode(true) as HTMLDivElement
+    previousPage.classList.add('page-transition__snapshot')
+    previousPage.setAttribute('aria-hidden', 'true')
+    previousPage.setAttribute('inert', '')
+    previousPage.querySelectorAll('[id]').forEach(element => {
+      element.removeAttribute('id')
+    })
+    previousPageLayer.replaceChildren(previousPage)
+
+    const exitX = direction === 'back' ? 18 : -18
+    const enterX = direction === 'back' ? -72 : 72
+    const peekX = direction === 'back'
+      ? 'calc(100% - 26px)'
+      : 'calc(-100% + 26px)'
 
     const exitAnimation = page.animate(
       [
-        { opacity: 1, transform: 'translateX(0)' },
-        { opacity: 0, transform: `translateX(${exitX}px)` },
+        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+        { opacity: .94, transform: `translate3d(${exitX}px, 0, 0) scale(.99)` },
       ],
       {
-        duration: 220,
+        duration: 120,
         easing: 'cubic-bezier(.4, 0, .2, 1)',
         fill: 'forwards',
       },
     )
-    activePageAnimationRef.current = exitAnimation
+    activePageAnimationsRef.current = [exitAnimation]
 
     try {
       await exitAnimation.finished
@@ -89,32 +115,59 @@ export default function App() {
 
     if (transitionId !== transitionIdRef.current) return
 
-    // Remove the outgoing page's filled animation before revealing the new page.
     exitAnimation.cancel()
 
     const enterAnimation = page.animate(
       [
-        { opacity: 0, transform: `translateX(${enterX}px)` },
-        { opacity: 1, transform: 'translateX(0)' },
+        { opacity: .92, transform: `translate3d(${enterX}px, 0, 0) scale(.992)` },
+        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
       ],
       {
-        duration: 280,
+        duration: 380,
         easing: 'cubic-bezier(.16, 1, .3, 1)',
         fill: 'both',
       },
     )
-    activePageAnimationRef.current = enterAnimation
+    const previousAnimation = previousPage.animate(
+      [
+        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+        { opacity: .68, transform: `translate3d(${peekX}, 0, 0) scale(.985)` },
+      ],
+      {
+        duration: 380,
+        easing: 'cubic-bezier(.22, .61, .36, 1)',
+        fill: 'both',
+      },
+    )
+    activePageAnimationsRef.current = [enterAnimation, previousAnimation]
 
     try {
-      await enterAnimation.finished
+      await Promise.all([enterAnimation.finished, previousAnimation.finished])
     } catch {
-      // A newer navigation can cancel the current animation.
+      // A newer navigation can cancel either animation.
     }
 
     if (transitionId !== transitionIdRef.current) return
 
-    enterAnimation.cancel()
-    activePageAnimationRef.current = null
+    const edgeFadeAnimation = previousPage.animate(
+      [{ opacity: .68 }, { opacity: 0 }],
+      {
+        duration: 100,
+        easing: 'ease-out',
+        fill: 'forwards',
+      },
+    )
+    activePageAnimationsRef.current = [edgeFadeAnimation]
+
+    try {
+      await edgeFadeAnimation.finished
+    } catch {
+      // A newer navigation can replace this transition.
+    }
+
+    if (transitionId !== transitionIdRef.current) return
+
+    clearActivePageTransition()
     page.style.pointerEvents = ''
   }
 
@@ -345,7 +398,13 @@ export default function App() {
         )}
       </header>
 
-      <div ref={pageRef} className="page-transition">
+      <div className="page-stage">
+        <div
+          ref={previousPageLayerRef}
+          className="page-previous-layer"
+          aria-hidden="true"
+        />
+        <div ref={pageRef} className="page-transition">
       {selectedPost ? (
         <PostPage post={selectedPost} />
       ) : (
@@ -397,6 +456,7 @@ export default function App() {
           </section>
         </main>
       )}
+        </div>
       </div>
 
       <footer className="site-footer">
