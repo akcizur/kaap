@@ -1,0 +1,70 @@
+name: Package v0254 release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/package-v0254.yml"
+  workflow_dispatch:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: package-v0254-release
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build production site
+        run: npm run build
+
+      - name: Create source and production release ZIP
+        shell: bash
+        run: |
+          rm -rf package
+          mkdir -p package
+
+          # Archive the complete tracked source snapshot, then add the built site.
+          git archive HEAD | tar -x -C package
+          mkdir -p package/dist
+          cp -a dist/. package/dist/
+
+          cat > package/RELEASE.txt <<EOF
+          Dimple release v0254
+          Repository: akcizur/kaap
+          Source commit: ${GITHUB_SHA}
+          Build: npm run build
+          Package contents: complete source project plus production-ready dist/ output.
+          EOF
+
+          (cd package && zip -X -q -r ../v0254.zip .)
+
+      - name: Commit release ZIP to main
+        shell: bash
+        run: |
+          git add v0254.zip
+          if git diff --cached --quiet; then
+            echo "v0254.zip is already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add release bundle v0254.zip"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
