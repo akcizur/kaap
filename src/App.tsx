@@ -67,8 +67,8 @@ export default function App() {
 
     page.style.pointerEvents = 'none'
 
-    // Keep a non-interactive snapshot underneath the incoming page. It gives
-    // the transition a real second layer instead of fading the whole page out.
+    // Preserve the outgoing page underneath the incoming one. The snapshot
+    // is inert and purely visual; only the new page remains interactive.
     const previousPage = page.cloneNode(true) as HTMLDivElement
     previousPage.classList.add('page-transition__snapshot')
     previousPage.setAttribute('aria-hidden', 'true')
@@ -78,81 +78,91 @@ export default function App() {
     })
     previousPageLayer.replaceChildren(previousPage)
 
-    const exitX = direction === 'back' ? 18 : -18
-    const enterX = direction === 'back' ? -72 : 72
-    const peekX = direction === 'back'
+    const enterX = direction === 'back' ? -48 : 48
+    const previousX = direction === 'back'
       ? 'calc(100% - 26px)'
       : 'calc(-100% + 26px)'
-
-    const exitAnimation = page.animate(
-      [
-        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-        { opacity: .94, transform: `translate3d(${exitX}px, 0, 0) scale(.99)` },
-      ],
-      {
-        duration: 120,
-        easing: 'cubic-bezier(.4, 0, .2, 1)',
-        fill: 'forwards',
-      },
-    )
-    activePageAnimationsRef.current = [exitAnimation]
-
-    try {
-      await exitAnimation.finished
-    } catch {
-      // A newer navigation can cancel the current animation.
-    }
-
-    if (transitionId !== transitionIdRef.current) return
 
     selectedPostIdRef.current = nextPostId
     setSelectedPostId(nextPostId)
     window.scrollTo(0, 0)
 
+    // Wait for React to commit the new content before collecting its
+    // transition elements. A second frame prevents a one-frame flash.
     await new Promise<void>(resolve => {
-      window.requestAnimationFrame(() => resolve())
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => resolve())
+      })
     })
 
     if (transitionId !== transitionIdRef.current) return
 
-    exitAnimation.cancel()
+    const incomingAnimation = page.animate(
+      [
+        { transform: `translate3d(${enterX}px, 0, 0)` },
+        { transform: 'translate3d(0, 0, 0)' },
+      ],
+      {
+        duration: 820,
+        easing: 'cubic-bezier(.22, .72, .2, 1)',
+        fill: 'both',
+      },
+    )
 
-    const enterAnimation = page.animate(
+    const outgoingAnimation = previousPage.animate(
       [
-        { opacity: .92, transform: `translate3d(${enterX}px, 0, 0) scale(.992)` },
         { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+        { opacity: .84, transform: `translate3d(${previousX}, 0, 0) scale(.992)` },
       ],
       {
-        duration: 380,
-        easing: 'cubic-bezier(.16, 1, .3, 1)',
+        duration: 900,
+        easing: 'cubic-bezier(.22, .72, .2, 1)',
         fill: 'both',
       },
     )
-    const previousAnimation = previousPage.animate(
-      [
-        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-        { opacity: .68, transform: `translate3d(${peekX}, 0, 0) scale(.985)` },
-      ],
-      {
-        duration: 380,
-        easing: 'cubic-bezier(.22, .61, .36, 1)',
-        fill: 'both',
-      },
+
+    // Reveal meaningful content blocks one by one instead of animating the
+    // entire page as a single moving slab. Cards receive a restrained stagger.
+    const transitionItems = Array.from(
+      page.querySelectorAll<HTMLElement>('[data-transition-item]'),
     )
-    activePageAnimationsRef.current = [enterAnimation, previousAnimation]
+    const itemAnimations = transitionItems.map((item, index) =>
+      item.animate(
+        [
+          { opacity: 0, transform: 'translate3d(0, 14px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        {
+          duration: 620,
+          delay: 140 + index * 76,
+          easing: 'cubic-bezier(.2, .75, .25, 1)',
+          fill: 'both',
+        },
+      ),
+    )
+
+    activePageAnimationsRef.current = [
+      incomingAnimation,
+      outgoingAnimation,
+      ...itemAnimations,
+    ]
 
     try {
-      await Promise.all([enterAnimation.finished, previousAnimation.finished])
+      await Promise.all(
+        activePageAnimationsRef.current.map(animation => animation.finished),
+      )
     } catch {
-      // A newer navigation can cancel either animation.
+      // A newer navigation can cancel the current transition.
     }
 
     if (transitionId !== transitionIdRef.current) return
 
+    // Let the old page's narrow edge remain perceptible briefly, then fade
+    // only that remnant away. The incoming page itself stays fully opaque.
     const edgeFadeAnimation = previousPage.animate(
-      [{ opacity: .68 }, { opacity: 0 }],
+      [{ opacity: .84 }, { opacity: 0 }],
       {
-        duration: 100,
+        duration: 220,
         easing: 'ease-out',
         fill: 'forwards',
       },
@@ -410,16 +420,16 @@ export default function App() {
       ) : (
         <main className="main-content">
           <section className="hero">
-            <h1 className="hero-title">
+            <h1 className="hero-title" data-transition-item="hero-title">
               Writing about craft,<br />ideas, and the work.
             </h1>
-            <p className="hero-copy">
+            <p className="hero-copy" data-transition-item="hero-copy">
               Dimple is an independent blog about writing, thinking, and building things worth reading. Published weekly.
             </p>
-            <code className="site-chip">dimple.blog</code>
+            <code className="site-chip" data-transition-item="site-chip">dimple.blog</code>
           </section>
 
-          <div className="posts-heading">
+          <div className="posts-heading" data-transition-item="posts-heading">
             <h2>Posts</h2>
             <span>
               {searchQuery
@@ -441,14 +451,14 @@ export default function App() {
           </div>
 
           {searchQuery && filteredPosts.length === 0 && (
-            <div className="empty-search">
+            <div className="empty-search" data-transition-item="empty-search">
               <Search className="ui-icon" size={20} strokeWidth={2} aria-hidden="true" />
               <strong>No posts found</strong>
               <span>Try a different search.</span>
             </div>
           )}
 
-          <section className="newsletter">
+          <section className="newsletter" data-transition-item="newsletter">
             <div className="newsletter-copy">
               <h3>Get it in your inbox</h3>
               <p>Email subscriptions are not connected yet. This section will be activated when a real mailing service is configured.</p>

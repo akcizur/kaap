@@ -8,27 +8,27 @@ type PostPageProps = {
 export function PostPage({ post }: PostPageProps) {
   return (
     <main className="main-content post-page">
-      <a className="back-link" href="./" aria-label="Back to posts">
+      <a className="back-link" href="./" aria-label="Back to posts" data-transition-item="back-link">
         <ArrowLeft className="ui-icon" size={16} strokeWidth={2} aria-hidden="true" />
         <span>Back to posts</span>
       </a>
 
       <article className="post-detail">
-        <div className="post-detail-kicker">
+        <div className="post-detail-kicker" data-transition-item="post-kicker">
           <span>{post.category}</span>
           <span>·</span>
           <span className="post-date-text">{post.date}</span>
         </div>
 
-        <h1 className="post-detail-title">{post.title}</h1>
+        <h1 className="post-detail-title" data-transition-item="post-title">{post.title}</h1>
 
-        <div className="post-detail-meta">
+        <div className="post-detail-meta" data-transition-item="post-meta">
           <span className="post-detail-readtime">{post.readTime}</span>
         </div>
 
-        <div className="post-detail-rule" />
+        <div className="post-detail-rule" data-transition-item="post-rule" />
 
-        <p className="post-detail-excerpt">{post.excerpt}</p>
+        <p className="post-detail-excerpt" data-transition-item="post-excerpt">{post.excerpt}</p>
       </article>
     </main>
   )

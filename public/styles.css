@@ -309,7 +309,7 @@ article:focus-visible {
   flex: 1;
   min-width: 0;
   background: var(--bg);
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 .hero {
