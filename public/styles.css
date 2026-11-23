@@ -1519,17 +1519,11 @@ a:focus-visible {
     3.7px 4.2px 7.5px var(--emboss-shade);
 }
 
-.soft-emboss--header {
-  --emboss-ink: var(--emboss-header-ink);
-}
-
-.soft-emboss--canvas {
-  /* Keep the glyphs filled; embossing is a surface treatment, not a cut-out. */
-  --emboss-ink: var(--text);
-}
-
+.soft-emboss--header,
+.soft-emboss--canvas,
 .soft-emboss--glass {
-  --emboss-ink: var(--emboss-glass-ink);
+  /* Every embossed label keeps a solid, theme-aware glyph fill. */
+  --emboss-ink: var(--text);
 }
 
 
