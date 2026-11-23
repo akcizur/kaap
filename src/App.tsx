@@ -31,11 +31,38 @@ export default function App() {
   const historyIndexRef = useRef(0)
   const transitionIdRef = useRef(0)
   const activePageAnimationsRef = useRef<Animation[]>([])
+  const transitionItemStylesRef = useRef<Array<{
+    element: HTMLElement
+    opacity: string
+    transform: string
+  }>>([])
+
+  function restoreTransitionItemStyles() {
+    transitionItemStylesRef.current.forEach(({ element, opacity, transform }) => {
+      element.style.opacity = opacity
+      element.style.transform = transform
+    })
+    transitionItemStylesRef.current = []
+  }
 
   function clearActivePageTransition() {
     activePageAnimationsRef.current.forEach(animation => animation.cancel())
     activePageAnimationsRef.current = []
+    restoreTransitionItemStyles()
     previousPageLayerRef.current?.replaceChildren()
+
+    if (pageRef.current) {
+      pageRef.current.style.visibility = ''
+      pageRef.current.style.pointerEvents = ''
+    }
+  }
+
+  function waitForPaint() {
+    return new Promise<void>(resolve => {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => resolve())
+      })
+    })
   }
 
   async function transitionToPost(
@@ -46,6 +73,9 @@ export default function App() {
 
     navigationTargetRef.current = nextPostId
     const transitionId = ++transitionIdRef.current
+
+    // Always restore the current page before taking its next snapshot. This
+    // also makes rapid successive navigation start from a clean visual state.
     clearActivePageTransition()
 
     const page = pageRef.current
@@ -61,14 +91,12 @@ export default function App() {
       selectedPostIdRef.current = nextPostId
       setSelectedPostId(nextPostId)
       window.scrollTo(0, 0)
-      if (page) page.style.pointerEvents = ''
       return
     }
 
     page.style.pointerEvents = 'none'
 
-    // Preserve the outgoing page underneath the incoming one. The snapshot
-    // is inert and purely visual; only the new page remains interactive.
+    // Keep the outgoing page as a visual-only layer above the next page.
     const previousPage = page.cloneNode(true) as HTMLDivElement
     previousPage.classList.add('page-transition__snapshot')
     previousPage.setAttribute('aria-hidden', 'true')
@@ -78,91 +106,117 @@ export default function App() {
     })
     previousPageLayer.replaceChildren(previousPage)
 
-    const enterX = direction === 'back' ? -48 : 48
-    const previousX = direction === 'back'
-      ? 'calc(100% - 26px)'
-      : 'calc(-100% + 26px)'
+    // Hide the live layer while the old page leaves. This avoids showing the
+    // new React content before the outgoing transition has finished.
+    page.style.visibility = 'hidden'
 
-    selectedPostIdRef.current = nextPostId
-    setSelectedPostId(nextPostId)
-    window.scrollTo(0, 0)
+    const outgoingX = direction === 'back'
+      ? 'calc(100% - 32px)'
+      : 'calc(-100% + 32px)'
+    const incomingX = direction === 'back' ? '-100%' : '100%'
 
-    // Wait for React to commit the new content before collecting its
-    // transition elements. A second frame prevents a one-frame flash.
-    await new Promise<void>(resolve => {
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => resolve())
-      })
-    })
-
-    if (transitionId !== transitionIdRef.current) return
-
-    const incomingAnimation = page.animate(
-      [
-        { transform: `translate3d(${enterX}px, 0, 0)` },
-        { transform: 'translate3d(0, 0, 0)' },
-      ],
-      {
-        duration: 820,
-        easing: 'cubic-bezier(.22, .72, .2, 1)',
-        fill: 'both',
-      },
-    )
-
+    // PHASE 1 — OUT: old page glides away and leaves a visible 32px edge.
     const outgoingAnimation = previousPage.animate(
       [
         { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-        { opacity: .84, transform: `translate3d(${previousX}, 0, 0) scale(.992)` },
+        { opacity: .92, transform: `translate3d(${outgoingX}, 0, 0) scale(.992)` },
       ],
       {
-        duration: 900,
-        easing: 'cubic-bezier(.22, .72, .2, 1)',
-        fill: 'both',
+        duration: 680,
+        easing: 'cubic-bezier(.22, .68, .2, 1)',
+        fill: 'forwards',
       },
     )
-
-    // Reveal meaningful content blocks one by one instead of animating the
-    // entire page as a single moving slab. Cards receive a restrained stagger.
-    const transitionItems = Array.from(
-      page.querySelectorAll<HTMLElement>('[data-transition-item]'),
-    )
-    const itemAnimations = transitionItems.map((item, index) =>
-      item.animate(
-        [
-          { opacity: 0, transform: 'translate3d(0, 14px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
-        ],
-        {
-          duration: 620,
-          delay: 140 + index * 76,
-          easing: 'cubic-bezier(.2, .75, .25, 1)',
-          fill: 'both',
-        },
-      ),
-    )
-
-    activePageAnimationsRef.current = [
-      incomingAnimation,
-      outgoingAnimation,
-      ...itemAnimations,
-    ]
+    activePageAnimationsRef.current = [outgoingAnimation]
 
     try {
-      await Promise.all(
-        activePageAnimationsRef.current.map(animation => animation.finished),
-      )
+      await outgoingAnimation.finished
     } catch {
-      // A newer navigation can cancel the current transition.
+      // A newer navigation can cancel the current phase.
     }
 
     if (transitionId !== transitionIdRef.current) return
 
-    // Let the old page's narrow edge remain perceptible briefly, then fade
-    // only that remnant away. The incoming page itself stays fully opaque.
-    const edgeFadeAnimation = previousPage.animate(
-      [{ opacity: .84 }, { opacity: 0 }],
+    selectedPostIdRef.current = nextPostId
+    setSelectedPostId(nextPostId)
+    window.scrollTo(0, 0)
+    await waitForPaint()
+
+    if (transitionId !== transitionIdRef.current) return
+
+    // Prepare the new page's individual components while the page itself is
+    // still hidden behind the outgoing snapshot edge.
+    const transitionItems = Array.from(
+      page.querySelectorAll<HTMLElement>('[data-transition-item]'),
+    )
+    transitionItemStylesRef.current = transitionItems.map(element => ({
+      element,
+      opacity: element.style.opacity,
+      transform: element.style.transform,
+    }))
+    transitionItems.forEach(element => {
+      element.style.opacity = '0'
+      element.style.transform = 'translate3d(0, 16px, 0)'
+    })
+
+    // PHASE 2 — IN: new page enters from the opposite side, behind the old edge.
+    const incomingAnimation = page.animate(
+      [
+        { transform: `translate3d(${incomingX}, 0, 0)` },
+        { transform: 'translate3d(0, 0, 0)' },
+      ],
       {
-        duration: 220,
+        duration: 820,
+        easing: 'cubic-bezier(.2, .72, .2, 1)',
+        fill: 'both',
+      },
+    )
+    page.style.visibility = ''
+    activePageAnimationsRef.current = [incomingAnimation]
+
+    try {
+      await incomingAnimation.finished
+    } catch {
+      // A newer navigation can cancel the current phase.
+    }
+
+    if (transitionId !== transitionIdRef.current) return
+
+    incomingAnimation.cancel()
+
+    // PHASE 3 — COMPONENT IN: reveal each section/card in a calm stagger.
+    const itemAnimations = transitionItems.map((item, index) =>
+      item.animate(
+        [
+          { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        {
+          duration: 560,
+          delay: 90 + index * 64,
+          easing: 'cubic-bezier(.2, .72, .25, 1)',
+          fill: 'both',
+        },
+      ),
+    )
+    activePageAnimationsRef.current = itemAnimations
+
+    try {
+      await Promise.all(itemAnimations.map(animation => animation.finished))
+    } catch {
+      // A newer navigation can cancel the component sequence.
+    }
+
+    if (transitionId !== transitionIdRef.current) return
+
+    itemAnimations.forEach(animation => animation.cancel())
+    restoreTransitionItemStyles()
+
+    // Remove the last visible strip only after the new page has settled in.
+    const edgeFadeAnimation = previousPage.animate(
+      [{ opacity: .92 }, { opacity: 0 }],
+      {
+        duration: 260,
         easing: 'ease-out',
         fill: 'forwards',
       },
@@ -172,13 +226,12 @@ export default function App() {
     try {
       await edgeFadeAnimation.finished
     } catch {
-      // A newer navigation can replace this transition.
+      // A newer navigation can replace the transition.
     }
 
     if (transitionId !== transitionIdRef.current) return
 
     clearActivePageTransition()
-    page.style.pointerEvents = ''
   }
 
   function handleAppClick(event: ReactMouseEvent<HTMLDivElement>) {
