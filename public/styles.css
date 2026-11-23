@@ -1551,6 +1551,7 @@ a:focus-visible {
 [data-glow='true']::before {
   content: '';
   position: absolute;
+  z-index: 2;
   inset: 0;
   border-radius: inherit;
   padding: 1px;
