@@ -278,48 +278,6 @@ article:focus-visible {
   min-width: 0;
 }
 
-.page-transition.is-exiting {
-  pointer-events: none;
-  animation: page-exit-left 240ms cubic-bezier(.4, 0, .2, 1) both;
-  will-change: opacity, transform;
-}
-
-.page-transition.is-entering {
-  animation: page-enter-right 300ms cubic-bezier(.16, 1, .3, 1) both;
-  will-change: opacity, transform;
-}
-
-@keyframes page-exit-left {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-28px);
-  }
-}
-
-@keyframes page-enter-right {
-  from {
-    opacity: 0;
-    transform: translateX(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-transition.is-exiting,
-  .page-transition.is-entering {
-    animation-duration: 1ms;
-  }
-}
-
 .hero {
   margin-bottom: 40px;
 }
