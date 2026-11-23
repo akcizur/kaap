@@ -1528,3 +1528,101 @@ a:focus-visible {
 .soft-emboss--glass {
   --emboss-ink: var(--emboss-glass-ink);
 }
+
+
+/* Pointer-following monochrome glow — adapted from the supplied button study. */
+:root {
+  --glow-ring-strong: rgba(255, 255, 255, .92);
+  --glow-ring-soft: rgba(117, 128, 145, .42);
+  --glow-pointer: rgba(255, 255, 255, .23);
+}
+
+:root[data-theme='dark'] {
+  --glow-ring-strong: rgba(255, 255, 255, .78);
+  --glow-ring-soft: rgba(186, 198, 216, .24);
+  --glow-pointer: rgba(255, 255, 255, .13);
+}
+
+[data-glow='true'] {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-glow='true']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 190deg,
+    var(--glow-ring-soft) 244deg,
+    var(--glow-ring-strong) 292deg,
+    transparent 338deg 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transform: rotate(0deg);
+  transition: opacity .28s ease;
+}
+
+[data-glow='true']::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    58px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+    var(--glow-pointer),
+    transparent 76%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .28s ease;
+}
+
+[data-glow='true'] > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-glow='true']:hover::before,
+[data-glow='true']:focus-visible::before {
+  opacity: 1;
+  animation: glow-ring-spin 2.8s linear infinite;
+}
+
+[data-glow='true']:hover::after,
+[data-glow='true']:focus-visible::after {
+  opacity: 1;
+}
+
+[data-glow='true']:active::before {
+  opacity: .85;
+  animation: none;
+}
+
+@keyframes glow-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-glow='true']:hover::before,
+  [data-glow='true']:focus-visible::before,
+  [data-glow='true']:active::before {
+    animation: none;
+    transition-duration: .01ms;
+  }
+
+  [data-glow='true']::after {
+    transition-duration: .01ms;
+  }
+}
