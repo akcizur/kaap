@@ -334,12 +334,13 @@ article:focus-visible {
   gap: 36px;
 }
 
-/* Grid view: separate cards into a clear, evenly spaced layout. */
+/* Grid view: give every card enough breathing room. */
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
-  gap: 20px;
+  column-gap: 24px;
+  row-gap: 32px;
 }
 
 .posts-grid .post-link {
@@ -412,10 +413,10 @@ article:focus-visible {
 
 .post-grid {
   display: flex;
-  min-height: 220px;
+  min-height: 240px;
   height: 100%;
   flex-direction: column;
-  padding: 22px;
+  padding: 24px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
@@ -838,11 +839,12 @@ article:focus-visible {
 @media (max-width: 560px) {
   .posts-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
+    row-gap: 20px;
   }
 
   .post-grid {
     min-height: 0;
+    padding: 22px;
   }
 }
 
