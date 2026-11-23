@@ -27,10 +27,14 @@ export default function App() {
   const pageRef = useRef<HTMLDivElement>(null)
   const selectedPostIdRef = useRef(selectedPostId)
   const navigationTargetRef = useRef(selectedPostId)
+  const historyIndexRef = useRef(0)
   const transitionIdRef = useRef(0)
   const activePageAnimationRef = useRef<Animation | null>(null)
 
-  async function transitionToPost(nextPostId: number | null) {
+  async function transitionToPost(
+    nextPostId: number | null,
+    direction: 'forward' | 'back',
+  ) {
     if (nextPostId === navigationTargetRef.current) return
 
     navigationTargetRef.current = nextPostId
@@ -51,10 +55,13 @@ export default function App() {
 
     page.style.pointerEvents = 'none'
 
+    const exitX = direction === 'back' ? 28 : -28
+    const enterX = direction === 'back' ? -24 : 24
+
     const exitAnimation = page.animate(
       [
         { opacity: 1, transform: 'translateX(0)' },
-        { opacity: 0, transform: 'translateX(-28px)' },
+        { opacity: 0, transform: `translateX(${exitX}px)` },
       ],
       {
         duration: 220,
@@ -87,7 +94,7 @@ export default function App() {
 
     const enterAnimation = page.animate(
       [
-        { opacity: 0, transform: 'translateX(24px)' },
+        { opacity: 0, transform: `translateX(${enterX}px)` },
         { opacity: 1, transform: 'translateX(0)' },
       ],
       {
@@ -143,8 +150,14 @@ export default function App() {
     }
 
     event.preventDefault()
-    window.history.pushState({}, '', destination.pathname + destination.search + destination.hash)
-    void transitionToPost(nextPostId)
+    const nextHistoryIndex = historyIndexRef.current + 1
+    window.history.pushState(
+      { ...window.history.state, __kaapHistoryIndex: nextHistoryIndex },
+      '',
+      destination.pathname + destination.search + destination.hash,
+    )
+    historyIndexRef.current = nextHistoryIndex
+    void transitionToPost(nextPostId, 'forward')
   }
 
   const { theme, viewMode } = preferences
@@ -166,10 +179,30 @@ export default function App() {
   }, [searchQuery])
 
   useEffect(() => {
-    const syncPost = () => {
+    // Store a monotonic index in each app-managed history entry so Back and
+    // Forward can animate in opposite directions.
+    const currentState = window.history.state ?? {}
+    const currentIndex = Number.isInteger(currentState.__kaapHistoryIndex)
+      ? currentState.__kaapHistoryIndex as number
+      : 0
+
+    historyIndexRef.current = currentIndex
+    window.history.replaceState(
+      { ...currentState, __kaapHistoryIndex: currentIndex },
+      '',
+      window.location.href,
+    )
+
+    const syncPost = (event: PopStateEvent) => {
+      const nextIndex = Number.isInteger(event.state?.__kaapHistoryIndex)
+        ? event.state.__kaapHistoryIndex as number
+        : historyIndexRef.current - 1
+      const direction = nextIndex < historyIndexRef.current ? 'back' : 'forward'
+
+      historyIndexRef.current = nextIndex
       const value = new URLSearchParams(window.location.search).get('post')
       const id = value ? Number(value) : NaN
-      void transitionToPost(Number.isInteger(id) && id > 0 ? id : null)
+      void transitionToPost(Number.isInteger(id) && id > 0 ? id : null, direction)
     }
 
     window.addEventListener('popstate', syncPost)
