@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type AnimationEvent as ReactAnimationEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent } from 'react'
 import {
   Globe2,
   Mail,
@@ -24,24 +24,91 @@ export default function App() {
     return Number.isInteger(id) && id > 0 ? id : null
   })
 
-  const [pagePhase, setPagePhase] = useState<'idle' | 'exit' | 'enter'>('idle')
-  const pagePhaseRef = useRef<'idle' | 'exit' | 'enter'>('idle')
-  const pendingPostIdRef = useRef<number | null>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
+  const selectedPostIdRef = useRef(selectedPostId)
+  const navigationTargetRef = useRef(selectedPostId)
+  const transitionIdRef = useRef(0)
+  const activePageAnimationRef = useRef<Animation | null>(null)
 
-  function setTransitionPhase(phase: 'idle' | 'exit' | 'enter') {
-    pagePhaseRef.current = phase
-    setPagePhase(phase)
-  }
+  async function transitionToPost(nextPostId: number | null) {
+    if (nextPostId === navigationTargetRef.current) return
 
-  function transitionToPost(nextPostId: number | null) {
-    const currentTarget = pagePhaseRef.current === 'exit'
-      ? pendingPostIdRef.current
-      : selectedPostId
+    navigationTargetRef.current = nextPostId
+    const transitionId = ++transitionIdRef.current
+    const page = pageRef.current
 
-    if (nextPostId === currentTarget) return
+    activePageAnimationRef.current?.cancel()
+    activePageAnimationRef.current = null
 
-    pendingPostIdRef.current = nextPostId
-    setTransitionPhase('exit')
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (!page || typeof page.animate !== 'function' || reduceMotion) {
+      selectedPostIdRef.current = nextPostId
+      setSelectedPostId(nextPostId)
+      window.scrollTo(0, 0)
+      if (page) page.style.pointerEvents = ''
+      return
+    }
+
+    page.style.pointerEvents = 'none'
+
+    const exitAnimation = page.animate(
+      [
+        { opacity: 1, transform: 'translateX(0)' },
+        { opacity: 0, transform: 'translateX(-28px)' },
+      ],
+      {
+        duration: 220,
+        easing: 'cubic-bezier(.4, 0, .2, 1)',
+        fill: 'forwards',
+      },
+    )
+    activePageAnimationRef.current = exitAnimation
+
+    try {
+      await exitAnimation.finished
+    } catch {
+      // A newer navigation can cancel the current animation.
+    }
+
+    if (transitionId !== transitionIdRef.current) return
+
+    selectedPostIdRef.current = nextPostId
+    setSelectedPostId(nextPostId)
+    window.scrollTo(0, 0)
+
+    await new Promise<void>(resolve => {
+      window.requestAnimationFrame(() => resolve())
+    })
+
+    if (transitionId !== transitionIdRef.current) return
+
+    // Remove the outgoing page's filled animation before revealing the new page.
+    exitAnimation.cancel()
+
+    const enterAnimation = page.animate(
+      [
+        { opacity: 0, transform: 'translateX(24px)' },
+        { opacity: 1, transform: 'translateX(0)' },
+      ],
+      {
+        duration: 280,
+        easing: 'cubic-bezier(.16, 1, .3, 1)',
+        fill: 'both',
+      },
+    )
+    activePageAnimationRef.current = enterAnimation
+
+    try {
+      await enterAnimation.finished
+    } catch {
+      // A newer navigation can cancel the current animation.
+    }
+
+    if (transitionId !== transitionIdRef.current) return
+
+    enterAnimation.cancel()
+    activePageAnimationRef.current = null
+    page.style.pointerEvents = ''
   }
 
   function handleAppClick(event: ReactMouseEvent<HTMLDivElement>) {
@@ -70,24 +137,14 @@ export default function App() {
     const id = value ? Number(value) : NaN
     const nextPostId = Number.isInteger(id) && id > 0 ? id : null
 
-    event.preventDefault()
-    window.history.pushState({}, '', destination.pathname + destination.search + destination.hash)
-    transitionToPost(nextPostId)
-  }
-
-  function handlePageAnimationEnd(event: ReactAnimationEvent<HTMLDivElement>) {
-    if (event.target !== event.currentTarget) return
-
-    if (pagePhaseRef.current === 'exit') {
-      setSelectedPostId(pendingPostIdRef.current)
-      window.scrollTo(0, 0)
-      setTransitionPhase('enter')
+    if (nextPostId === navigationTargetRef.current) {
+      event.preventDefault()
       return
     }
 
-    if (pagePhaseRef.current === 'enter') {
-      setTransitionPhase('idle')
-    }
+    event.preventDefault()
+    window.history.pushState({}, '', destination.pathname + destination.search + destination.hash)
+    void transitionToPost(nextPostId)
   }
 
   const { theme, viewMode } = preferences
@@ -112,11 +169,12 @@ export default function App() {
     const syncPost = () => {
       const value = new URLSearchParams(window.location.search).get('post')
       const id = value ? Number(value) : NaN
-      transitionToPost(Number.isInteger(id) && id > 0 ? id : null)
+      void transitionToPost(Number.isInteger(id) && id > 0 ? id : null)
     }
+
     window.addEventListener('popstate', syncPost)
     return () => window.removeEventListener('popstate', syncPost)
-  }, [selectedPostId])
+  }, [])
 
   useEffect(() => {
     if (!searchOpen) return
@@ -234,10 +292,7 @@ export default function App() {
         )}
       </header>
 
-      <div
-        className={`page-transition${pagePhase === 'exit' ? ' is-exiting' : pagePhase === 'enter' ? ' is-entering' : ''}`}
-        onAnimationEnd={handlePageAnimationEnd}
-      >
+      <div ref={pageRef} className="page-transition">
       {selectedPost ? (
         <PostPage post={selectedPost} />
       ) : (
