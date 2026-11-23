@@ -301,6 +301,8 @@ article:focus-visible {
   background: var(--bg);
   pointer-events: none;
   user-select: none;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .page-transition {
@@ -309,7 +311,8 @@ article:focus-visible {
   flex: 1;
   min-width: 0;
   background: var(--bg);
-  will-change: transform;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .hero {
