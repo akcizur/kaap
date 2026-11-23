@@ -149,6 +149,26 @@ export default function App() {
       return
     }
 
+    // The article's own Back link should use the real previous history entry,
+    // so it gets the same reverse transition as the browser Back button.
+    if (link.classList.contains('back-link') && nextPostId === null) {
+      event.preventDefault()
+
+      if (historyIndexRef.current > 0) {
+        window.history.back()
+      } else {
+        const nextHistoryIndex = historyIndexRef.current + 1
+        window.history.pushState(
+          { ...window.history.state, __kaapHistoryIndex: nextHistoryIndex },
+          '',
+          destination.pathname + destination.search + destination.hash,
+        )
+        historyIndexRef.current = nextHistoryIndex
+        void transitionToPost(null, 'back')
+      }
+      return
+    }
+
     event.preventDefault()
     const nextHistoryIndex = historyIndexRef.current + 1
     window.history.pushState(
