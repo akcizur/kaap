@@ -1958,13 +1958,17 @@ a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .back-link,
   .back-link::after,
+  .back-link:hover::after,
   .back-link .ui-icon,
   .nav-button,
   .nav-button .ui-icon {
     transition-duration: .01ms !important;
+    animation: none !important;
   }
 
-  .back-link::after {
+  .back-link::after,
+  .back-link:hover::after {
+    opacity: 0;
     transform: none;
   }
 }
