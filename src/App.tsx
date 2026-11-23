@@ -373,7 +373,7 @@ export default function App() {
     <div className="app" onClick={handleAppClick}>
       <header className="site-header">
         <div className="header-inner">
-          <span className="brand">Dimple</span>
+          <span className="brand soft-emboss soft-emboss--header">Dimple</span>
 
           <nav className="header-actions" aria-label="Site controls">
             <button
@@ -463,7 +463,7 @@ export default function App() {
       ) : (
         <main className="main-content">
           <section className="hero">
-            <h1 className="hero-title" data-transition-item="hero-title">
+            <h1 className="hero-title soft-emboss soft-emboss--canvas" data-transition-item="hero-title">
               Writing about craft,<br />ideas, and the work.
             </h1>
             <p className="hero-copy" data-transition-item="hero-copy">
@@ -473,7 +473,7 @@ export default function App() {
           </section>
 
           <div className="posts-heading" data-transition-item="posts-heading">
-            <h2>Posts</h2>
+            <h2 className="soft-emboss soft-emboss--canvas">Posts</h2>
             <span>
               {searchQuery
                 ? `${filteredPosts.length} of ${posts.length} articles`
@@ -503,7 +503,7 @@ export default function App() {
 
           <section className="newsletter" data-transition-item="newsletter">
             <div className="newsletter-copy">
-              <h3>Get it in your inbox</h3>
+              <h3 className="soft-emboss soft-emboss--glass">Get it in your inbox</h3>
               <p>Email subscriptions are not connected yet. This section will be activated when a real mailing service is configured.</p>
             </div>
           </section>
