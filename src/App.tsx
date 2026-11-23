@@ -99,7 +99,6 @@ export default function App() {
     // to finish before IN starts (the previous implementation introduced a
     // visible pause here).
     page.style.pointerEvents = 'none'
-    page.style.visibility = 'hidden'
 
     const previousPage = page.cloneNode(true) as HTMLDivElement
     previousPage.classList.add('page-transition__snapshot')
@@ -109,6 +108,10 @@ export default function App() {
       element.removeAttribute('id')
     })
     previousPageLayer.replaceChildren(previousPage)
+
+    // Hide only the live layer. The snapshot above must retain its visible
+    // computed state or the outgoing page will disappear instead of moving.
+    page.style.visibility = 'hidden'
 
     selectedPostIdRef.current = nextPostId
     setSelectedPostId(nextPostId)
