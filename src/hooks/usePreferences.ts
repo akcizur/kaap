@@ -22,7 +22,7 @@ function applyTheme(theme: Theme) {
 
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   if (themeColor) {
-    themeColor.content = theme === 'dark' ? '#0a0a0a' : '#ffffff'
+    themeColor.content = theme === 'dark' ? '#090a0d' : '#f1f2f5'
   }
 }
 
