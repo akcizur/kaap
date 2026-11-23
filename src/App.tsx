@@ -29,6 +29,7 @@ export default function App() {
   const selectedPostIdRef = useRef(selectedPostId)
   const navigationTargetRef = useRef(selectedPostId)
   const historyIndexRef = useRef(0)
+  const historyBackPendingRef = useRef(false)
   const transitionIdRef = useRef(0)
   const activePageAnimationsRef = useRef<Animation[]>([])
   const transitionItemStylesRef = useRef<Array<{
@@ -274,16 +275,22 @@ export default function App() {
     if (link.classList.contains('back-link') && nextPostId === null) {
       event.preventDefault()
 
+      // Prevent a rapid double-click from traversing two history entries.
+      if (historyBackPendingRef.current) return
+
       if (historyIndexRef.current > 0) {
+        historyBackPendingRef.current = true
         window.history.back()
       } else {
-        const nextHistoryIndex = historyIndexRef.current + 1
-        window.history.pushState(
-          { ...window.history.state, __kaapHistoryIndex: nextHistoryIndex },
+        // A post opened from an external link has no in-app list entry behind
+        // it. Replace the current URL instead of pushing another entry, so the
+        // browser Back button does not reopen the same article.
+        const currentState = window.history.state ?? {}
+        window.history.replaceState(
+          { ...currentState, __kaapHistoryIndex: historyIndexRef.current },
           '',
           destination.pathname + destination.search + destination.hash,
         )
-        historyIndexRef.current = nextHistoryIndex
         void transitionToPost(null, 'back')
       }
       return
@@ -334,6 +341,7 @@ export default function App() {
     )
 
     const syncPost = (event: PopStateEvent) => {
+      historyBackPendingRef.current = false
       const nextIndex = Number.isInteger(event.state?.__kaapHistoryIndex)
         ? event.state.__kaapHistoryIndex as number
         : historyIndexRef.current - 1
@@ -392,7 +400,7 @@ export default function App() {
           <nav className="header-actions" aria-label="Site controls">
             <button
               type="button"
-              className="nav-button" data-glow="true"
+              className="nav-button"
               onClick={handleLayoutToggle}
               title={`Layout: ${VIEW_MODES[viewMode].label}`}
               aria-label={`Change layout. Current: ${VIEW_MODES[viewMode].label}`}
@@ -405,7 +413,7 @@ export default function App() {
 
             <button
               type="button"
-              className="nav-button" data-glow="true"
+              className="nav-button"
               onClick={handleThemeToggle}
               title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
               aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
@@ -419,7 +427,7 @@ export default function App() {
 
             <button
               type="button"
-              className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`} data-glow="true"
+              className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`}
               onClick={handleSearchToggle}
               title={searchOpen ? 'Close search' : 'Search'}
               aria-label={searchOpen ? 'Close search' : 'Search'}
