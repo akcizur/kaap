@@ -753,15 +753,15 @@ Motion is part of the interface hierarchy, not decoration.
 - icon swap = 180–260ms,
 - search panel = 220–320ms,
 - card hover = 220–280ms,
-- layout FLIP = 480ms,
-- shared card/detail transition = 560ms,
-- theme color transition = 350–450ms,
-- fallback page slide = 700–760ms.
+- layout FLIP = 390ms,
+- page exit = 190ms,
+- page entrance = 260ms,
+- theme color transition = 350–450ms.
 
 ### Shared elements and page navigation
 Opening a post sends the list page out to the left, then brings the detail page in from the right. Returning reverses the vector: detail exits right and the list enters from the left. Browser Back/Forward uses the history direction, not a fixed animation preset.
 
-The outgoing page finishes before the incoming page is shown. Do not crossfade two full-page layers or leave duplicate content visible. The clicked post title is the only shared floating element: it morphs into the detail title and reverses to the same card title on return. If the source title is off-screen or unavailable, use the directional page transition without a shared element.
+Page navigation is strictly serial. The outgoing page finishes first; its final frame is pinned before the animation is released. The destination content is committed synchronously while the page wrapper is hidden, then one entrance animation begins. Never crossfade, morph a duplicate title, or animate outgoing and incoming content simultaneously. While a page transition is active, other layout changes are locked; browser history navigation is queued and played after the current transition.
 
 ### History and reading position
 Every in-app history entry stores its own scroll position. Returning from a post restores the previous list position after the list has expanded. Browser Back and the in-page Back link use the same navigation path.
