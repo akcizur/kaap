@@ -289,7 +289,7 @@ article:focus-visible {
   flex: 1;
   min-width: 0;
   background: var(--bg);
-  will-change: opacity, transform;
+  will-change: auto;
 }
 
 .hero {
@@ -2091,27 +2091,6 @@ button {
     opacity: 1;
     transform: scale(1) rotate(0);
   }
-}
-
-/* The shared transition is only the title glyphs — never an empty card shell. */
-.shared-title-transition {
-  position: fixed !important;
-  z-index: 1000 !important;
-  display: block !important;
-  box-sizing: border-box !important;
-  max-width: none !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  pointer-events: none !important;
-  transform: none !important;
-  transition: none !important;
-  animation: none !important;
-  will-change: left, top, width, height, font-size, line-height, letter-spacing, opacity;
 }
 
 .app {
