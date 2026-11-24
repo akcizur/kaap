@@ -19,7 +19,14 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchButtonRef = useRef<HTMLButtonElement>(null)
-  const layoutSnapshotRef = useRef<Map<string, DOMRect> | null>(null)
+  const layoutSnapshotRef = useRef<{
+    positions: Map<string, DOMRect>
+    scrollY: number
+    anchorPostId: string | null
+    anchorTop: number | null
+  } | null>(null)
+  const layoutAnimationRunRef = useRef(0)
+  const layoutAnimationsRef = useRef<Animation[]>([])
   const sharedElementRef = useRef<HTMLElement | null>(null)
   const sharedTargetRef = useRef<HTMLElement | null>(null)
   const sharedTargetStyleRef = useRef<{ opacity: string; visibility: string } | null>(null)
@@ -38,26 +45,26 @@ export default function App() {
   const historyBackPendingRef = useRef(false)
   const transitionIdRef = useRef(0)
   const activePageAnimationsRef = useRef<Animation[]>([])
-  const transitionItemStylesRef = useRef<Array<{
-    element: HTMLElement
-    opacity: string
-    transform: string
-    filter: string
-  }>>([])
 
-  function restoreTransitionItemStyles() {
-    transitionItemStylesRef.current.forEach(({ element, opacity, transform, filter }) => {
-      element.style.opacity = opacity
-      element.style.transform = transform
-      element.style.filter = filter
-    })
-    transitionItemStylesRef.current = []
+
+  function cancelLayoutAnimations() {
+    const run = ++layoutAnimationRunRef.current
+    layoutAnimationsRef.current.forEach(animation => animation.cancel())
+    layoutAnimationsRef.current = []
+
+    const transitioningContainer = pageRef.current?.querySelector<HTMLElement>('.posts.is-layout-transitioning')
+    if (transitioningContainer) {
+      window.requestAnimationFrame(() => {
+        if (run === layoutAnimationRunRef.current) {
+          transitioningContainer.classList.remove('is-layout-transitioning')
+        }
+      })
+    }
   }
 
   function clearActivePageTransition() {
     activePageAnimationsRef.current.forEach(animation => animation.cancel())
     activePageAnimationsRef.current = []
-    restoreTransitionItemStyles()
 
     if (sharedSourceRef.current && sharedSourceVisibilityRef.current !== null) {
       sharedSourceRef.current.style.visibility = sharedSourceVisibilityRef.current
@@ -368,44 +375,6 @@ export default function App() {
         },
       )
 
-      // Small, directional item arrivals add rhythm without blurring or
-      // crossfading a second page over the first one.
-      const transitionItems = Array.from(
-        page.querySelectorAll<HTMLElement>('[data-transition-item]'),
-      ).filter(element => element !== sharedTarget)
-      transitionItemStylesRef.current = transitionItems.map(element => ({
-        element,
-        opacity: element.style.opacity,
-        transform: element.style.transform,
-        filter: element.style.filter,
-      }))
-      const itemOffsetY = direction === 'forward' ? 7 : -7
-      transitionItems.forEach(element => {
-        element.style.opacity = '0'
-        element.style.transform = 'translate3d(0, ' + itemOffsetY + 'px, 0)'
-        element.style.filter = 'none'
-      })
-      const itemAnimations = transitionItems.map((item, index) =>
-        item.animate(
-          [
-            {
-              opacity: 0,
-              transform: 'translate3d(0, ' + itemOffsetY + 'px, 0)',
-            },
-            {
-              opacity: 1,
-              transform: 'translate3d(0, 0, 0)',
-            },
-          ],
-          {
-            duration: 260,
-            delay: 24 + Math.min(index, 8) * 18,
-            easing: 'cubic-bezier(.2, .78, .2, 1)',
-            fill: 'both',
-          },
-        ),
-      )
-
       const orphanTitleAnimation = sharedElement && !sharedAnimation
         ? sharedElement.animate(
             [
@@ -422,7 +391,6 @@ export default function App() {
 
       activePageAnimationsRef.current = [
         incomingAnimation,
-        ...itemAnimations,
         ...(sharedAnimation ? [sharedAnimation] : []),
         ...(revealAnimation ? [revealAnimation] : []),
         ...(orphanTitleAnimation ? [orphanTitleAnimation] : []),
@@ -558,56 +526,95 @@ export default function App() {
   }, [searchQuery])
 
   useLayoutEffect(() => {
-    const snapshots = layoutSnapshotRef.current
-    if (!snapshots) return
+    const snapshot = layoutSnapshotRef.current
+    if (!snapshot) return
     layoutSnapshotRef.current = null
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const container = pageRef.current?.querySelector<HTMLElement>('.posts')
+    if (!container) return
+
+    const run = ++layoutAnimationRunRef.current
+    layoutAnimationsRef.current.forEach(animation => animation.cancel())
+    layoutAnimationsRef.current = []
+    container.classList.add('is-layout-transitioning')
 
     const links = Array.from(
-      pageRef.current?.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]') ?? [],
+      container.querySelectorAll<HTMLElement>('.post-link[data-post-id]'),
     )
+
+    if (snapshot.anchorPostId !== null && snapshot.anchorTop !== null) {
+      const anchor = links.find(link => link.dataset.postId === snapshot.anchorPostId)
+      const anchorBounds = anchor?.getBoundingClientRect()
+      if (anchorBounds) {
+        const correctedScrollY = Math.max(
+          0,
+          snapshot.scrollY + anchorBounds.top - snapshot.anchorTop,
+        )
+        if (Math.abs(correctedScrollY - window.scrollY) > 1) {
+          window.scrollTo(0, correctedScrollY)
+        }
+      }
+    }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      container.classList.remove('is-layout-transitioning')
+      return
+    }
+
+    const animations: Animation[] = []
 
     links.forEach(link => {
       const id = link.dataset.postId
-      const previous = id ? snapshots.get(id) : undefined
+      const previous = id ? snapshot.positions.get(id) : undefined
       if (!previous) return
 
       const next = link.getBoundingClientRect()
       const deltaX = previous.left - next.left
       const deltaY = previous.top - next.top
-      const scaleX = Math.max(.55, Math.min(1.8, previous.width / Math.max(1, next.width)))
-      const scaleY = Math.max(.55, Math.min(1.8, previous.height / Math.max(1, next.height)))
 
-      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1 && Math.abs(scaleX - 1) < .02 && Math.abs(scaleY - 1) < .02) return
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return
 
-      link.style.willChange = 'transform'
       const animation = link.animate(
         [
           {
-            transform: 'translate3d(' + deltaX + 'px, ' + deltaY + 'px, 0) scale(' + scaleX + ', ' + scaleY + ')',
-            transformOrigin: 'top left',
+            transform: 'translate3d(' + deltaX + 'px, ' + deltaY + 'px, 0)',
+            opacity: .82,
           },
           {
-            transform: 'translate3d(0, 0, 0) scale(1, 1)',
-            transformOrigin: 'top left',
+            transform: 'translate3d(0, 0, 0)',
+            opacity: 1,
           },
         ],
         {
-          duration: 480,
+          duration: 390,
           easing: 'cubic-bezier(.2, .82, .2, 1)',
           fill: 'both',
         },
       )
 
-      animation.finished
-        .then(() => {
-          animation.cancel()
-          link.style.willChange = ''
-        })
-        .catch(() => {
-          link.style.willChange = ''
-        })
+      animations.push(animation)
+    })
+
+    layoutAnimationsRef.current = animations
+
+    if (animations.length === 0) {
+      container.classList.remove('is-layout-transitioning')
+      return
+    }
+
+    Promise.all(animations.map(animation => animation.finished.catch(() => undefined))).then(() => {
+      if (run !== layoutAnimationRunRef.current) return
+
+      animations.forEach(animation => animation.cancel())
+      layoutAnimationsRef.current = []
+
+      // Cancel while CSS transitions are still disabled, then restore hover
+      // behavior on the next frame. This prevents a second, visible snap.
+      window.requestAnimationFrame(() => {
+        if (run === layoutAnimationRunRef.current) {
+          container.classList.remove('is-layout-transitioning')
+        }
+      })
     })
   }, [viewMode])
 
@@ -690,21 +697,43 @@ export default function App() {
   }
 
   function handleLayoutToggle() {
-    const snapshots = new Map<string, DOMRect>()
+    cancelLayoutAnimations()
+
+    const positions = new Map<string, DOMRect>()
     const links = Array.from(
       pageRef.current?.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]') ?? [],
     )
+    let anchorPostId: string | null = null
+    let anchorTop: number | null = null
+
     links.forEach(link => {
       const id = link.dataset.postId
-      if (id) snapshots.set(id, link.getBoundingClientRect())
+      if (!id) return
+
+      const bounds = link.getBoundingClientRect()
+      positions.set(id, bounds)
+
+      if (
+        anchorPostId === null &&
+        bounds.bottom > 56 &&
+        bounds.top < window.innerHeight
+      ) {
+        anchorPostId = id
+        anchorTop = bounds.top
+      }
     })
-    layoutSnapshotRef.current = snapshots
+
+    layoutSnapshotRef.current = {
+      positions,
+      scrollY: window.scrollY,
+      anchorPostId,
+      anchorTop,
+    }
 
     const index = VIEW_MODE_ORDER.indexOf(viewMode)
     const nextMode = VIEW_MODE_ORDER[(index + 1) % VIEW_MODE_ORDER.length]
     updatePreference('viewMode', nextMode)
   }
-
   function handleThemeToggle() {
     updatePreference('theme', theme === 'light' ? 'dark' : 'light')
   }
