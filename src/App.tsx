@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { flushSync } from 'react-dom'
 import {
   Globe2,
   Mail,
@@ -76,14 +77,6 @@ export default function App() {
     }
   }
 
-  function waitForPaint() {
-    return new Promise<void>(resolve => {
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => resolve())
-      })
-    })
-  }
-
   async function transitionToPost(
     nextPostId: number | null,
     direction: 'forward' | 'back',
@@ -110,10 +103,11 @@ export default function App() {
 
     try {
       if (!page || typeof page.animate !== 'function' || reduceMotion) {
-        selectedPostIdRef.current = nextPostId
-        setSelectedPostId(nextPostId)
+        flushSync(() => {
+          selectedPostIdRef.current = nextPostId
+          setSelectedPostId(nextPostId)
+        })
         window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
-        await waitForPaint()
         return
       }
 
@@ -146,18 +140,13 @@ export default function App() {
       activePageAnimationsRef.current = []
       page.style.visibility = 'hidden'
 
-      selectedPostIdRef.current = nextPostId
-      setSelectedPostId(nextPostId)
-      window.scrollTo(0, 0)
-      await waitForPaint()
-      if (transitionId !== transitionIdRef.current) return
-
-      // Back to the list: restore its scroll only after its full height exists.
-      if (nextPostId === null && restoreScrollY > 0) {
-        window.scrollTo(0, restoreScrollY)
-        await waitForPaint()
-        if (transitionId !== transitionIdRef.current) return
-      }
+      // Commit the destination synchronously while the wrapper is hidden.
+      // This avoids exposing an empty frame between the two serial motions.
+      flushSync(() => {
+        selectedPostIdRef.current = nextPostId
+        setSelectedPostId(nextPostId)
+      })
+      window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
 
       // Set the incoming pose while hidden, then reveal and animate only once.
       page.style.transform = 'translate3d(' + incomingX + 'px, 0, 0)'
