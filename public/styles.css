@@ -283,34 +283,13 @@ article:focus-visible {
   isolation: isolate;
 }
 
-.page-previous-layer {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.page-previous-layer > .page-transition__snapshot {
-  position: absolute;
-  inset: 0 auto auto 0;
-  z-index: 0;
-  width: 100%;
-  min-width: 0;
-  min-height: 100%;
-  background: var(--bg);
-  pointer-events: none;
-  user-select: none;
-  will-change: opacity;
-}
-
 .page-transition {
   position: relative;
   z-index: 1;
   flex: 1;
   min-width: 0;
   background: var(--bg);
-  will-change: opacity;
+  will-change: opacity, transform;
 }
 
 .hero {
@@ -1117,10 +1096,6 @@ body {
 .page-transition,
 .main-content {
   background: transparent;
-}
-
-.page-previous-layer > .page-transition__snapshot {
-  background: var(--bg);
 }
 
 .hero-title {
@@ -2311,5 +2286,66 @@ button {
 
   .posts-magazine .post-magazine:not(.is-featured) .post-kicker {
     margin-bottom: 6px;
+  }
+}
+
+
+/* Direction-aware motion: page swaps are sequential, never two full pages blended. */
+.nav-icon-swap--layout-next {
+  animation: layout-icon-next .28s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.nav-icon-swap--theme-dark {
+  animation: theme-icon-dark .3s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.nav-icon-swap--theme-light {
+  animation: theme-icon-light .3s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.nav-icon-swap--search-open {
+  animation: search-icon-open .24s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+.nav-icon-swap--search-closed {
+  animation: search-icon-close .24s cubic-bezier(.2, .82, .2, 1) both;
+}
+
+@keyframes layout-icon-next {
+  from { opacity: 0; transform: translate3d(0, 5px, 0) rotate(18deg) scale(.82); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) rotate(0) scale(1); }
+}
+
+@keyframes theme-icon-dark {
+  from { opacity: 0; transform: rotate(-90deg) scale(.72); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+@keyframes theme-icon-light {
+  from { opacity: 0; transform: rotate(90deg) scale(.72); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+@keyframes search-icon-open {
+  from { opacity: 0; transform: rotate(90deg) scale(.72); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+@keyframes search-icon-close {
+  from { opacity: 0; transform: rotate(-90deg) scale(.72); }
+  to { opacity: 1; transform: rotate(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-icon-swap--layout-next,
+  .nav-icon-swap--theme-dark,
+  .nav-icon-swap--theme-light,
+  .nav-icon-swap--search-open,
+  .nav-icon-swap--search-closed {
+    animation: none !important;
+  }
+
+  .page-transition {
+    will-change: auto;
   }
 }
