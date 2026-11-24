@@ -234,19 +234,28 @@ Nezahušťuj layout pouze kvůli využití prostoru.
 
 ---
 
-## 10. Radius
+## 10. Radius and control geometry
 
-Aktuální language:
+There are only two allowed shapes for interactive controls:
 
-- icon controls = circle,
-- search input = 10px,
-- navbar settings options = 7px,
-- small chip = 6px,
-- input = 10px,
-- post card = 16px,
-- newsletter = 20px.
+- **Circle** for icon-only actions.
+- **Pill** for text actions, links, search, and form controls.
 
-Pill není součástí hlavní navigace. Search je inline field přímo v navbar panelu.
+A button must never use a rounded-rectangle or squircle radius.
+
+Rounded-rectangle corners are reserved for **content cards and editorial surfaces**. Their radius may express hierarchy:
+
+- standard post cards = 15–17px,
+- featured/grid cards = 18–21px,
+- newsletter and detail surfaces = 19–22px.
+
+Other geometry:
+
+- icon controls = 50% / true circle,
+- pill controls and fields = 999px,
+- small chips = pill.
+
+Do not let a card radius leak into a button, navigation control, or form action.
 
 ---
 
