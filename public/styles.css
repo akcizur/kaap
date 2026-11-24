@@ -2120,23 +2120,25 @@ button {
   }
 }
 
-/* The shared card is a temporary viewport layer, not a second content card. */
-.shared-element-transition {
+/* The shared transition is only the title glyphs — never an empty card shell. */
+.shared-title-transition {
   position: fixed !important;
   z-index: 1000 !important;
-  overflow: hidden !important;
+  display: block !important;
   box-sizing: border-box !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   pointer-events: none !important;
   transform: none !important;
   transition: none !important;
   animation: none !important;
-  will-change: left, top, width, height, border-radius, opacity;
-}
-
-.shared-element-transition *,
-.shared-element-transition::before,
-.shared-element-transition::after {
-  pointer-events: none !important;
+  will-change: left, top, width, height, font-size, line-height, letter-spacing, opacity;
 }
 
 .app {
@@ -2165,7 +2167,7 @@ button {
     transform: none;
   }
 
-  .shared-element-transition {
+  .shared-title-transition {
     display: none !important;
     animation: none !important;
     transition: none !important;
