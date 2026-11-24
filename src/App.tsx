@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import { PostPage } from './components/PostPage'
 import { PostCard } from './components/PostCard'
-import { WarpText } from './components/WarpText'
 import { posts } from './data/posts'
 import { VIEW_MODE_ORDER, VIEW_MODES } from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
@@ -556,8 +555,8 @@ export default function App() {
       ) : (
         <main className="main-content">
           <section className="hero">
-            <h1 className="hero-title soft-emboss soft-emboss--canvas" data-transition-item="hero-title" aria-label="Writing about craft, ideas, and the work.">
-              <WarpText text="Writing about craft," /><br /><WarpText text="ideas, and the work." />
+            <h1 className="hero-title soft-emboss soft-emboss--canvas" data-transition-item="hero-title">
+              Writing about craft,<br />ideas, and the work.
             </h1>
             <p className="hero-copy" data-transition-item="hero-copy">
               Dimple is an independent blog about writing, thinking, and building things worth reading. Published weekly.
@@ -566,7 +565,7 @@ export default function App() {
           </section>
 
           <div className="posts-heading" data-transition-item="posts-heading">
-            <h2 className="soft-emboss soft-emboss--canvas" aria-label="Posts"><WarpText text="Posts" /></h2>
+            <h2 className="soft-emboss soft-emboss--canvas">Posts</h2>
             <span>
               {searchQuery
                 ? `${filteredPosts.length} of ${posts.length} articles`
