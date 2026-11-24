@@ -97,7 +97,6 @@ export default function App() {
     transitionLockRef.current = true
     const transitionId = ++transitionIdRef.current
     navigationTargetRef.current = nextPostId
-    const currentPostId = selectedPostIdRef.current
     const page = pageRef.current
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -173,9 +172,11 @@ export default function App() {
     } catch {
       // Recover visibly and deterministically if an animation is interrupted.
       if (transitionId === transitionIdRef.current) {
-        selectedPostIdRef.current = nextPostId
-        navigationTargetRef.current = nextPostId
-        setSelectedPostId(nextPostId)
+        flushSync(() => {
+          selectedPostIdRef.current = nextPostId
+          navigationTargetRef.current = nextPostId
+          setSelectedPostId(nextPostId)
+        })
         window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
       }
     } finally {
