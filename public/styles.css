@@ -2002,24 +2002,3 @@ a:focus-visible {
 .site-chip {
   border-radius: 999px;
 }
-
-/* Keep the editorial card language independent from control geometry. */
-.post-list,
-.post-grid,
-.post-magazine,
-.post-magazine.is-featured,
-.post-compact,
-.newsletter,
-.post-detail,
-.empty-search {
-  border-radius: revert-layer;
-}
-
-@media (max-width: 640px) {
-  .nav-button {
-    width: 32px;
-    min-width: 32px;
-    height: 32px;
-    min-height: 32px;
-  }
-}
