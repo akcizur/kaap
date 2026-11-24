@@ -565,7 +565,7 @@ export default function App() {
           </section>
 
           <div className="posts-heading" data-transition-item="posts-heading">
-            <h2 className="soft-emboss soft-emboss--canvas">Posts</h2>
+            <h2 className="soft-emboss soft-emboss--canvas" aria-label="Posts"><WarpText text="Posts" /></h2>
             <span>
               {searchQuery
                 ? `${filteredPosts.length} of ${posts.length} articles`
