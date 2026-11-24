@@ -758,17 +758,19 @@ Motion is part of the interface hierarchy, not decoration.
 - theme color transition = 350–450ms,
 - fallback page slide = 700–760ms.
 
-### Shared elements
-Opening a post morphs the clicked card into the article detail surface. Returning to the list morphs the detail surface back into the same post card when it is available. Keep the cloned transition surface fixed to the viewport while the document scroll position changes.
+### Shared elements and page navigation
+Opening a post sends the list page out to the left, then brings the detail page in from the right. Returning reverses the vector: detail exits right and the list enters from the left. Browser Back/Forward uses the history direction, not a fixed animation preset.
+
+The outgoing page finishes before the incoming page is shown. Do not crossfade two full-page layers or leave duplicate content visible. The clicked post title is the only shared floating element: it morphs into the detail title and reverses to the same card title on return. If the source title is off-screen or unavailable, use the directional page transition without a shared element.
 
 ### History and reading position
-Every in-app history entry stores its own scroll position. Returning from a post restores the previous list position and the same article remains visible. Browser Back and the in-page Back link use the same navigation path.
+Every in-app history entry stores its own scroll position. Returning from a post restores the previous list position after the list has expanded. Browser Back and the in-page Back link use the same navigation path.
 
 ### Layout morph
-List, Grid, Magazine, and Compact keep stable post identities. Use FLIP from the previous card bounds to the new bounds; do not replace the entire list with a blind fade.
+List, Grid, Magazine, and Compact keep stable post identities. Use FLIP from each previous card bound to its new bound. Let actual geometry determine each card's travel vector; do not add a second snapshot layer or a blind whole-list fade.
 
 ### Navbar
-Icon changes use a short keyed crossfade / scale transition. Search remains mounted while closed so it can animate out. Escape closes it and restores focus to the Search control. Cmd/Ctrl + K opens it.
+Layout advances through the configured mode cycle. Theme icon motion follows the new light/dark state. Search opens downward and closes in the reverse direction. Search remains mounted while closed so it can animate out. Escape closes it and restores focus to the Search control. Cmd/Ctrl + K opens it.
 
 ### Motion accessibility
 Respect `prefers-reduced-motion`. In that mode use immediate theme/layout changes and direct navigation without spatial morphing. All controls remain keyboard operable.
