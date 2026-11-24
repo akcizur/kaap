@@ -1972,3 +1972,54 @@ a:focus-visible {
     transform: none;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Canonical control geometry                                                  */
+/* Buttons are circles or pills. Rounded-rectangle radii belong to cards only. */
+/* -------------------------------------------------------------------------- */
+
+.nav-button,
+.nav-search-clear,
+.subscribe-button,
+.footer-icon-link {
+  border-radius: 50%;
+  aspect-ratio: 1;
+}
+
+.nav-button {
+  flex: 0 0 auto;
+}
+
+.nav-search-clear,
+.subscribe-button,
+.footer-icon-link {
+  flex-shrink: 0;
+}
+
+.back-link,
+.nav-search,
+.email-input,
+.site-chip {
+  border-radius: 999px;
+}
+
+/* Keep the editorial card language independent from control geometry. */
+.post-list,
+.post-grid,
+.post-magazine,
+.post-magazine.is-featured,
+.post-compact,
+.newsletter,
+.post-detail,
+.empty-search {
+  border-radius: revert-layer;
+}
+
+@media (max-width: 640px) {
+  .nav-button {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+}
