@@ -2459,3 +2459,30 @@ html {
     transition-delay: 0ms !important;
   }
 }
+
+
+/* Cinematic route space: WAAPI drives the page; CSS only supplies perspective. */
+.page-stage {
+  perspective: 1800px;
+  perspective-origin: 50% 44%;
+}
+
+.page-transition {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.page-transition.is-route-transitioning {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-stage {
+    perspective: none;
+  }
+
+  .page-transition {
+    transform-style: flat;
+    backface-visibility: visible;
+  }
+}

@@ -1,8 +1,13 @@
 export const MOTION = {
   page: {
-    distance: 22,
-    exit: { duration: 190, easing: 'cubic-bezier(.55, 0, .8, .35)' },
-    enter: { duration: 260, easing: 'cubic-bezier(.2, .82, .2, 1)' },
+    distance: 84,
+    depth: 92,
+    lift: 7,
+    rotation: 1.7,
+    scale: 0.965,
+    blur: 8,
+    exit: { duration: 320, easing: 'cubic-bezier(.62, 0, .84, .28)' },
+    enter: { duration: 520, easing: 'cubic-bezier(.16, 1, .3, 1)' },
   },
   control: {
     icon: { duration: 240, easing: 'cubic-bezier(.2, .82, .2, 1)' },

@@ -67,6 +67,8 @@ export default function App() {
       pageRef.current.style.pointerEvents = ''
       pageRef.current.style.opacity = ''
       pageRef.current.style.transform = ''
+      pageRef.current.style.filter = ''
+      pageRef.current.style.transformOrigin = ''
       pageRef.current.style.willChange = ''
     }
   }
@@ -112,18 +114,30 @@ export default function App() {
       page.style.pointerEvents = 'none'
       page.style.willChange = 'transform'
 
-      // Strictly serial motion: the current page leaves completely before
-      // React swaps its content. No shared overlay, crossfade, or title reveal.
+      // A cinematic page move: directional travel, restrained perspective,
+      // shallow depth, and a focus pull. Exit and entrance remain strictly serial.
       const outgoingX = direction === 'forward'
         ? -MOTION.page.distance
         : MOTION.page.distance
       const incomingX = -outgoingX
+      const outgoingRotation = direction === 'forward'
+        ? -MOTION.page.rotation
+        : MOTION.page.rotation
+      const incomingRotation = -outgoingRotation
+      const makeTravelPose = (x: number, rotation: number) =>
+        'translate3d(' + x + 'px, ' + MOTION.page.lift + 'px, -' + MOTION.page.depth + 'px) ' +
+        'rotateY(' + rotation + 'deg) scale(' + MOTION.page.scale + ')'
+      const outgoingPose = makeTravelPose(outgoingX, outgoingRotation)
+      const incomingPose = makeTravelPose(incomingX, incomingRotation)
+      const softFocus = 'blur(' + MOTION.page.blur + 'px)'
+
+      page.style.transformOrigin = 'center 48%'
       const outgoingMotion = motionDirector.play({
         channel: 'route',
         element: page,
         keyframes: [
-          { transform: 'translate3d(0, 0, 0)' },
-          { transform: 'translate3d(' + outgoingX + 'px, 0, 0)' },
+          { transform: 'translate3d(0, 0, 0) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0px)' },
+          { transform: outgoingPose, opacity: 0, filter: softFocus },
         ],
         timing: MOTION.page.exit,
       })
@@ -131,30 +145,32 @@ export default function App() {
       if (!(await outgoingMotion.finished)) throw new Error('Page exit motion was cancelled')
       if (transitionId !== transitionIdRef.current) return
 
-      // Pin the exact final frame inline BEFORE canceling the WAAPI effect.
-      // This prevents the browser from briefly restoring the page's origin.
-      page.style.transform = 'translate3d(' + outgoingX + 'px, 0, 0)'
+      // Pin every animated property before canceling WAAPI, preventing a frame
+      // jump while the old route is replaced in the hidden wrapper.
+      page.style.transform = outgoingPose
+      page.style.opacity = '0'
+      page.style.filter = softFocus
       outgoingMotion.cancel()
       activePageAnimationsRef.current = []
       page.style.visibility = 'hidden'
 
-      // Commit the destination synchronously while the wrapper is hidden.
-      // This avoids exposing an empty frame between the two serial motions.
       flushSync(() => {
         selectedPostIdRef.current = nextPostId
         setSelectedPostId(nextPostId)
       })
       window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
 
-      // Set the incoming pose while hidden, then reveal and animate only once.
-      page.style.transform = 'translate3d(' + incomingX + 'px, 0, 0)'
+      // Prepare the incoming page at the opposite edge and at shallow depth.
+      page.style.transform = incomingPose
+      page.style.opacity = '0'
+      page.style.filter = softFocus
       page.style.visibility = ''
       const incomingMotion = motionDirector.play({
         channel: 'route',
         element: page,
         keyframes: [
-          { transform: 'translate3d(' + incomingX + 'px, 0, 0)' },
-          { transform: 'translate3d(0, 0, 0)' },
+          { transform: incomingPose, opacity: 0, filter: softFocus },
+          { transform: 'translate3d(0, 0, 0) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0px)' },
         ],
         timing: MOTION.page.enter,
       })
@@ -162,8 +178,10 @@ export default function App() {
       if (!(await incomingMotion.finished)) throw new Error('Page entrance motion was cancelled')
       if (transitionId !== transitionIdRef.current) return
 
-      // As above, make the final frame the base style before canceling.
+      // Remove the WAAPI effect only after the exact resting pose is pinned.
       page.style.transform = 'none'
+      page.style.opacity = ''
+      page.style.filter = ''
       incomingMotion.cancel()
       activePageAnimationsRef.current = []
     } catch {
@@ -514,6 +532,7 @@ export default function App() {
           <span className="brand soft-emboss soft-emboss--header">Dimple</span>
 
           <nav className="header-actions" aria-label="Site controls">
+            {!selectedPost && (
             <button
               type="button"
               className="nav-button"
@@ -529,6 +548,8 @@ export default function App() {
                 })()}
               </span>
             </button>
+
+            )}
 
             <button
               type="button"

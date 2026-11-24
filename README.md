@@ -946,4 +946,6 @@ CSS owns hover and surface feedback. Web Animations API owns route movement and 
 
 Layout switches are intentionally immediate. The current visible post is used as a scroll anchor; per-card FLIP is disabled to avoid crossing paths and flashes. Reduced-motion preferences return idle motion handles and keep navigation immediate.
 
+Article navigation uses a cinematic, direction-aware depth move. The current page exits first, then the destination enters from the opposite side with a restrained Y rotation and focus blur; Back and Forward reverse the travel direction. The two pages never overlap. The layout control is intentionally hidden while an article detail is open.
+
 Use MOTION and the matching CSS variables before introducing new timing values.
