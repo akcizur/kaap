@@ -1,5 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 import type { Post } from '../data/posts'
+import { WarpText } from './WarpText'
 
 type PostPageProps = {
   post: Post
@@ -20,7 +21,7 @@ export function PostPage({ post }: PostPageProps) {
           <span className="post-date-text">{post.date}</span>
         </div>
 
-        <h1 className="post-detail-title soft-emboss soft-emboss--canvas" data-transition-item="post-title">{post.title}</h1>
+        <h1 className="post-detail-title soft-emboss soft-emboss--canvas" data-transition-item="post-title" aria-label={post.title}><WarpText text={post.title} /></h1>
 
         <div className="post-detail-meta" data-transition-item="post-meta">
           <span className="post-detail-readtime">{post.readTime}</span>
