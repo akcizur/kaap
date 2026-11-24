@@ -101,7 +101,7 @@ export default function App() {
         : sharedSource.querySelector<HTMLElement>('h4, .compact-title')
       : null
     const sourceBounds = sharedSourceTitle?.getBoundingClientRect()
-    const sourceTitleText = sharedSourceTitle?.textContent?.replace(/\\s+/g, ' ').trim() ?? ''
+    const sourceTitleText = sharedSourceTitle?.textContent?.trim() ?? ''
     const sourceStyle = sharedSourceTitle ? window.getComputedStyle(sharedSourceTitle) : null
     const sourceTypography = sourceStyle ? {
       fontFamily: sourceStyle.fontFamily,
@@ -231,7 +231,7 @@ export default function App() {
     const sharedTarget = targetSelector
       ? page.querySelector<HTMLElement>(targetSelector)
       : null
-    const targetTitleText = sharedTarget?.textContent?.replace(/\\s+/g, ' ').trim() ?? ''
+    const targetTitleText = sharedTarget?.textContent?.trim() ?? ''
 
     if (
       sharedElement &&
