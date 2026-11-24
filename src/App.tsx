@@ -95,7 +95,27 @@ export default function App() {
         ? pageRef.current?.querySelector<HTMLElement>('.post-detail') ?? null
         : null
     )
-    const sourceBounds = sharedSource?.getBoundingClientRect()
+    const sharedSourceTitle = sharedSource
+      ? sharedSource.matches('.post-detail')
+        ? sharedSource.querySelector<HTMLElement>('.post-detail-title')
+        : sharedSource.querySelector<HTMLElement>('h4, .compact-title')
+      : null
+    const sourceBounds = sharedSourceTitle?.getBoundingClientRect()
+    const sourceTitleText = sharedSourceTitle?.textContent?.replace(/\\s+/g, ' ').trim() ?? ''
+    const sourceStyle = sharedSourceTitle ? window.getComputedStyle(sharedSourceTitle) : null
+    const sourceTypography = sourceStyle ? {
+      fontFamily: sourceStyle.fontFamily,
+      fontSize: sourceStyle.fontSize,
+      fontWeight: sourceStyle.fontWeight,
+      fontStyle: sourceStyle.fontStyle,
+      lineHeight: sourceStyle.lineHeight,
+      letterSpacing: sourceStyle.letterSpacing,
+      color: sourceStyle.color,
+      textAlign: sourceStyle.textAlign,
+      textTransform: sourceStyle.textTransform,
+      textShadow: sourceStyle.textShadow,
+      webkitTextStroke: sourceStyle.getPropertyValue('-webkit-text-stroke'),
+    } : null
     const transitionId = ++transitionIdRef.current
 
     navigationTargetRef.current = nextPostId
@@ -129,29 +149,59 @@ export default function App() {
     })
     previousPageLayer.replaceChildren(previousPage)
 
-    // A fixed clone keeps the clicked card attached to the viewport while
-    // the destination page and its scroll position are being prepared.
+    const sourcePostId = sharedSource?.closest<HTMLElement>('[data-post-id]')?.dataset.postId
+    const snapshotTitleSelector = currentPostId !== null
+      ? '.post-detail-title'
+      : sourcePostId
+        ? '[data-post-id="' + sourcePostId + '"] .post h4, [data-post-id="' + sourcePostId + '"] .post .compact-title'
+        : null
+    if (snapshotTitleSelector) {
+      const snapshotTitle = previousPage.querySelector<HTMLElement>(snapshotTitleSelector)
+      if (snapshotTitle) snapshotTitle.style.visibility = 'hidden'
+    }
+
+    // Animate one shared typographic element. A full-card clone stretched into
+    // the detail wrapper, leaving a large empty panel and a duplicate title.
     let sharedElement: HTMLElement | null = null
-    if (sharedSource && sourceBounds) {
-      sharedElement = sharedSource.cloneNode(true) as HTMLElement
-      sharedElement.classList.add('shared-element-transition')
-      sharedElement.querySelectorAll('[id]').forEach(element => {
-        element.removeAttribute('id')
-      })
-      Object.assign(sharedElement.style, {
+    if (sharedSourceTitle && sourceBounds && sourceTypography && sourceTitleText) {
+      const title = document.createElement('div')
+      title.className = 'shared-title-transition'
+      title.textContent = sourceTitleText
+      title.setAttribute('aria-hidden', 'true')
+      Object.assign(title.style, {
         position: 'fixed',
         left: sourceBounds.left + 'px',
         top: sourceBounds.top + 'px',
         width: sourceBounds.width + 'px',
         height: sourceBounds.height + 'px',
         margin: '0',
+        padding: '0',
         zIndex: '1000',
         boxSizing: 'border-box',
         pointerEvents: 'none',
         opacity: '1',
+        display: 'block',
+        overflow: 'visible',
+        whiteSpace: 'normal',
+        background: 'transparent',
+        border: '0',
+        borderRadius: '0',
+        boxShadow: 'none',
+        fontFamily: sourceTypography.fontFamily,
+        fontSize: sourceTypography.fontSize,
+        fontWeight: sourceTypography.fontWeight,
+        fontStyle: sourceTypography.fontStyle,
+        lineHeight: sourceTypography.lineHeight,
+        letterSpacing: sourceTypography.letterSpacing,
+        color: sourceTypography.color,
+        textAlign: sourceTypography.textAlign,
+        textTransform: sourceTypography.textTransform,
+        textShadow: sourceTypography.textShadow,
       })
-      document.body.appendChild(sharedElement)
-      sharedElementRef.current = sharedElement
+      title.style.setProperty('-webkit-text-stroke', sourceTypography.webkitTextStroke)
+      document.body.appendChild(title)
+      sharedElement = title
+      sharedElementRef.current = title
     }
 
     page.style.visibility = 'hidden'
@@ -174,18 +224,24 @@ export default function App() {
     page.style.visibility = ''
 
     const targetSelector = nextPostId !== null
-      ? '.post-detail'
+      ? '.post-detail-title'
       : currentPostId !== null
-        ? '[data-post-id="' + currentPostId + '"] .post'
+        ? '[data-post-id="' + currentPostId + '"] .post h4, [data-post-id="' + currentPostId + '"] .post .compact-title'
         : null
     const sharedTarget = targetSelector
       ? page.querySelector<HTMLElement>(targetSelector)
       : null
+    const targetTitleText = sharedTarget?.textContent?.replace(/\\s+/g, ' ').trim() ?? ''
 
-    if (sharedElement && sharedTarget && sourceBounds) {
+    if (
+      sharedElement &&
+      sharedTarget &&
+      sourceBounds &&
+      sourceTypography &&
+      targetTitleText === sourceTitleText
+    ) {
       const targetBounds = sharedTarget.getBoundingClientRect()
-      const sourceRadius = getComputedStyle(sharedElement).borderRadius
-      const targetRadius = getComputedStyle(sharedTarget).borderRadius
+      const targetStyle = window.getComputedStyle(sharedTarget)
 
       sharedTargetStyleRef.current = {
         opacity: sharedTarget.style.opacity,
@@ -197,7 +253,8 @@ export default function App() {
 
       const transitionItems = Array.from(
         page.querySelectorAll<HTMLElement>('[data-transition-item]'),
-      )
+      ).filter(element => element !== sharedTarget)
+
       transitionItemStylesRef.current = transitionItems.map(element => ({
         element,
         opacity: element.style.opacity,
@@ -215,7 +272,11 @@ export default function App() {
             top: sourceBounds.top + 'px',
             width: sourceBounds.width + 'px',
             height: sourceBounds.height + 'px',
-            borderRadius: sourceRadius,
+            fontSize: sourceTypography.fontSize,
+            fontWeight: sourceTypography.fontWeight,
+            lineHeight: sourceTypography.lineHeight,
+            letterSpacing: sourceTypography.letterSpacing,
+            color: sourceTypography.color,
             opacity: 1,
           },
           {
@@ -223,8 +284,12 @@ export default function App() {
             top: targetBounds.top + 'px',
             width: targetBounds.width + 'px',
             height: targetBounds.height + 'px',
-            borderRadius: targetRadius,
-            opacity: .98,
+            fontSize: targetStyle.fontSize,
+            fontWeight: targetStyle.fontWeight,
+            lineHeight: targetStyle.lineHeight,
+            letterSpacing: targetStyle.letterSpacing,
+            color: targetStyle.color,
+            opacity: 1,
             offset: .82,
           },
           {
@@ -232,7 +297,9 @@ export default function App() {
             top: targetBounds.top + 'px',
             width: targetBounds.width + 'px',
             height: targetBounds.height + 'px',
-            borderRadius: targetRadius,
+            fontSize: targetStyle.fontSize,
+            lineHeight: targetStyle.lineHeight,
+            letterSpacing: targetStyle.letterSpacing,
             opacity: 0,
           },
         ],
@@ -268,7 +335,7 @@ export default function App() {
           { opacity: 1, transform: 'translate3d(0, 0, 0)' },
         ],
         {
-          duration: 210,
+          duration: 190,
           delay: 390,
           easing: 'cubic-bezier(.16, 1, .3, 1)',
           fill: 'both',
