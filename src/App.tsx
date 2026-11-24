@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { PostPage } from './components/PostPage'
 import { PostCard } from './components/PostCard'
+import { WarpText } from './components/WarpText'
 import { posts } from './data/posts'
 import { VIEW_MODE_ORDER, VIEW_MODES } from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
