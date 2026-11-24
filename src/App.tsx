@@ -559,6 +559,7 @@ export default function App() {
             <h1 className="hero-title soft-emboss soft-emboss--canvas" data-transition-item="hero-title" aria-label="Writing about craft, ideas, and the work.">
               <WarpText text="Writing about craft," /><br /><WarpText text="ideas, and the work." />
             </h1>
+            <p className="hero-copy" data-transition-item="hero-copy">
               Dimple is an independent blog about writing, thinking, and building things worth reading. Published weekly.
             </p>
             <code className="site-chip" data-transition-item="site-chip">dimple.blog</code>
