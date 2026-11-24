@@ -741,3 +741,34 @@ Při konfliktu:
     [ ] dark works
     [ ] mobile works
     [ ] 90/100/110 works
+
+
+## 37. Motion system
+
+Motion is part of the interface hierarchy, not decoration.
+
+### Timing
+- hover feedback = 150–200ms,
+- button press = 120ms,
+- icon swap = 180–260ms,
+- search panel = 220–320ms,
+- card hover = 220–280ms,
+- layout FLIP = 480ms,
+- shared card/detail transition = 560ms,
+- theme color transition = 350–450ms,
+- fallback page slide = 700–760ms.
+
+### Shared elements
+Opening a post morphs the clicked card into the article detail surface. Returning to the list morphs the detail surface back into the same post card when it is available. Keep the cloned transition surface fixed to the viewport while the document scroll position changes.
+
+### History and reading position
+Every in-app history entry stores its own scroll position. Returning from a post restores the previous list position and the same article remains visible. Browser Back and the in-page Back link use the same navigation path.
+
+### Layout morph
+List, Grid, Magazine, and Compact keep stable post identities. Use FLIP from the previous card bounds to the new bounds; do not replace the entire list with a blind fade.
+
+### Navbar
+Icon changes use a short keyed crossfade / scale transition. Search remains mounted while closed so it can animate out. Escape closes it and restores focus to the Search control. Cmd/Ctrl + K opens it.
+
+### Motion accessibility
+Respect `prefers-reduced-motion`. In that mode use immediate theme/layout changes and direct navigation without spatial morphing. All controls remain keyboard operable.
