@@ -576,29 +576,17 @@ Bez velké logomark ilustrace.
 
 ## 27. Animace
 
-Utility animations:
+Timing a easing se řídí společným frameworkem v src/motion/index.ts a CSS tokeny v public/styles.css.
 
-cca 0.15s.
+- press: 120ms,
+- hover: 180ms,
+- icon: 240ms,
+- panel: 300ms,
+- theme: 420ms,
+- route exit: 190ms,
+- route enter: 260ms.
 
-Navbar panel:
-
-cca 0.18s.
-
-Theme:
-
-cca 0.3s.
-
-Používej:
-
-- opacity,
-- color,
-- background-color,
-- border-color,
-- transform.
-
-Nepřidávej permanentní loops.
-
----
+Používej opacity, color, background-color, border-color a malé transformace. Layout změna zůstává okamžitá se zachováním scroll anchoru. Trvalé dekorativní smyčky nejsou povolené.
 
 ## 28. Responsive rules
 
@@ -743,38 +731,27 @@ Při konfliktu:
     [ ] 90/100/110 works
 
 
-## 37. Motion system
+## 37. Motion framework
 
-Motion is part of the interface hierarchy, not decoration.
+Runtime je v src/motion/index.ts. Exportuje MOTION presety, motionDirector, MotionHandle a MotionChannel.
 
-### Timing
-- hover feedback = 150–200ms,
-- button press = 120ms,
-- icon swap = 180–260ms,
-- search panel = 220–320ms,
-- card hover = 220–280ms,
-- layout FLIP = 390ms,
-- page exit = 190ms,
-- page entrance = 260ms,
-- theme color transition = 350–450ms.
+### Kanály a výhradní vlastnictví
+- route je exkluzivní transakce stránky. beginRoute() zruší aktivní efekty a zablokuje control motion do endRoute().
+- control je single-flight. Nová změna ikony zruší předchozí motion místo vrstvení.
+- Jedinou pohybující se stránkovou vrstvou je .page-transition. Během route přechodu jsou CSS animace a přechody potomků i hlavičky vypnuté.
+- CSS vlastní hover a surface feedback; WAAPI vlastní pohyb ikony a celé stránky. Jedna vlastnost jednoho elementu nesmí mít dva vlastníky.
 
-### Shared elements and page navigation
-Opening a post sends the list page out to the left, then brings the detail page in from the right. Returning reverses the vector: detail exits right and the list enters from the left. Browser Back/Forward uses the history direction, not a fixed animation preset.
+### Časování
+- press 120ms, hover 180ms, icon 240ms, panel 300ms, theme 420ms, route exit 190ms, route enter 260ms.
 
-Page navigation is strictly serial. The outgoing page finishes first; its final frame is pinned before the animation is released. The destination content is committed synchronously while the page wrapper is hidden, then one entrance animation begins. Never crossfade, morph a duplicate title, or animate outgoing and incoming content simultaneously. While a page transition is active, other layout changes are locked; browser history navigation is queued and played after the current transition.
+### Navigace
+Otevření článku posílá seznam doleva a detail vstupuje zprava. Zpět a Forward používají opačný směr. Odchozí animace se dokončí a připne před výměnou obsahu; vstupní začne až po commitu nové stránky. Žádný crossfade ani překryv dvou stránek.
 
-### History and reading position
-Every in-app history entry stores its own scroll position. Returning from a post restores the previous list position after the list has expanded. Browser Back and the in-page Back link use the same navigation path.
+### Layout a scroll
+Přepnutí List, Grid, Magazine a Compact je okamžité. První viditelný článek slouží jako scroll anchor. Per-card FLIP se nepoužívá, protože trajektorie karet se mohou křížit a způsobit blikání.
 
-### Layout morph
-List, Grid, Magazine, and Compact keep stable post identities. Use FLIP from each previous card bound to its new bound. Let actual geometry determine each card's travel vector; do not add a second snapshot layer or a blind whole-list fade.
-
-### Navbar
-Layout advances through the configured mode cycle. Theme icon motion follows the new light/dark state. Search opens downward and closes in the reverse direction. Search remains mounted while closed so it can animate out. Escape closes it and restores focus to the Search control. Cmd/Ctrl + K opens it.
-
-### Motion accessibility
-Respect `prefers-reduced-motion`. In that mode use immediate theme/layout changes and direct navigation without spatial morphing. All controls remain keyboard operable.
-
+### Přerušení a přístupnost
+Každá WAAPI animace má cancel handle. Route cleanup uklidí aktivní efekty a uvolní zámek. Runtime kontroluje prefers-reduced-motion při každém spuštění a v tomto režimu používá okamžitou variantu. Všechny ovládací prvky zůstávají ovladatelné klávesnicí.
 
 ## 38. Search panel layout
 

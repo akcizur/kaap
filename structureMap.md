@@ -19,6 +19,8 @@ kaap/
 │   ├── config/viewModes.ts
 │   ├── data/posts.ts
 │   ├── hooks/usePreferences.ts
+│   ├── motion/
+│   │   └── index.ts
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── vite-env.d.ts
@@ -42,6 +44,7 @@ kaap/
 | `src/config/viewModes.ts` | pořadí, ikony, popisky a CSS třídy layoutů |
 | `src/data/posts.ts` | statická data šesti článků a typ Post |
 | `src/hooks/usePreferences.ts` | theme a viewMode v React state + localStorage |
+| `src/motion/index.ts` | sdílené motion presety, exkluzivní kanály, WAAPI a rušení animací |
 | `public/styles.css` | globální CSS, tokeny, komponenty a responsive pravidla |
 | `vite.config.ts` | React plugin a GitHub Pages base path |
 | `.github/workflows/deploy-pages.yml` | build a deployment na GitHub Pages |
@@ -192,3 +195,16 @@ GitHub Actions workflow reaguje na push do `main` a ruční spuštění. Použí
 - `README.md` — účel, stack a provoz projektu
 - `designRules.md` — vizuální pravidla
 - `structureMap.md` — skutečná technická struktura a datové toky
+
+## 17. Motion framework
+
+src/motion/index.ts je jediným runtime vlastníkem WAAPI animací.
+
+- MOTION obsahuje route exit/enter a control icon timing.
+- motionDirector spravuje exkluzivní route a single-flight control kanál.
+- beginRoute() ruší aktivní motion a blokuje další control animace.
+- endRoute() uklidí zbylé efekty a uvolní zámek.
+- play() vrací cancellable MotionHandle.
+- prefersReducedMotion() poskytuje společné rozhodnutí pro okamžitou variantu.
+
+CSS tokeny v public/styles.css odpovídají stejné timing stupnici. Layout switch nepoužívá FLIP; obnovuje pouze scroll anchor.

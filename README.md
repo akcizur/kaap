@@ -8,7 +8,7 @@
 **GitHub Pages:** https://akcizur.github.io/kaap/  
 **Website reference:** https://dimple.blog  
 **Default branch:** main  
-**Documented revision:** 24 September 2026 · current single-navbar architecture
+**Documented revision:** 24 November 2026 · exclusive motion framework
 
 ---
 
@@ -931,3 +931,19 @@ Tyto tři soubory tvoří dokumentační source of truth projektu.
 ## 37. Repository
 
 https://github.com/akcizur/kaap
+
+---
+
+## Motion framework
+
+The dependency-free runtime lives in src/motion/index.ts. It exports shared MOTION presets, a motionDirector singleton, MotionHandle and MotionChannel.
+
+Motion is split into two managed channels:
+- route: exclusive serial page navigation. It cancels control motion and locks descendant CSS effects until the transition is cleaned up.
+- control: single-flight icon motion. A new icon state cancels the previous animation instead of stacking another.
+
+CSS owns hover and surface feedback. Web Animations API owns route movement and icon glyph transforms. One element/property must never have two animation owners.
+
+Layout switches are intentionally immediate. The current visible post is used as a scroll anchor; per-card FLIP is disabled to avoid crossing paths and flashes. Reduced-motion preferences return idle motion handles and keep navigation immediate.
+
+Use MOTION and the matching CSS variables before introducing new timing values.

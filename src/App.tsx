@@ -24,7 +24,7 @@ export default function App() {
   const layoutIconRef = useRef<HTMLSpanElement>(null)
   const themeIconRef = useRef<HTMLSpanElement>(null)
   const searchIconRef = useRef<HTMLSpanElement>(null)
-  const previousViewModeRef = useRef(viewMode)
+  const previousViewModeRef = useRef(preferences.viewMode)
   const previousThemeRef = useRef(preferences.theme)
   const previousSearchOpenRef = useRef(searchOpen)
   const layoutSnapshotRef = useRef<{
@@ -128,7 +128,7 @@ export default function App() {
         timing: MOTION.page.exit,
       })
       activePageAnimationsRef.current = [outgoingMotion]
-      await outgoingMotion.finished
+      if (!(await outgoingMotion.finished)) throw new Error('Page exit motion was cancelled')
       if (transitionId !== transitionIdRef.current) return
 
       // Pin the exact final frame inline BEFORE canceling the WAAPI effect.
@@ -159,7 +159,7 @@ export default function App() {
         timing: MOTION.page.enter,
       })
       activePageAnimationsRef.current = [incomingMotion]
-      await incomingMotion.finished
+      if (!(await incomingMotion.finished)) throw new Error('Page entrance motion was cancelled')
       if (transitionId !== transitionIdRef.current) return
 
       // As above, make the final frame the base style before canceling.
