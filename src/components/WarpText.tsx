@@ -46,9 +46,9 @@ export function WarpText({ text }: WarpTextProps) {
 
   return (
     <>
-      {text.split(/(\\s+)/u).map((part, partIndex) => {
+      {text.split(/(\s+)/u).map((part, partIndex) => {
         if (!part) return null
-        if (/^\\s+$/u.test(part)) return part
+        if (/^\s+$/u.test(part)) return part
 
         const currentWordIndex = wordIndex
         wordIndex += 1
