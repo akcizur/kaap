@@ -21,13 +21,10 @@ export default function App() {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchButtonRef = useRef<HTMLButtonElement>(null)
   const layoutSnapshotRef = useRef<{
-    positions: Map<string, DOMRect>
     scrollY: number
     anchorPostId: string | null
     anchorTop: number | null
   } | null>(null)
-  const layoutAnimationRunRef = useRef(0)
-  const layoutAnimationsRef = useRef<Animation[]>([])
   const transitionLockRef = useRef(false)
   const queuedNavigationRef = useRef<{
     postId: number | null
@@ -48,21 +45,6 @@ export default function App() {
   const transitionIdRef = useRef(0)
   const activePageAnimationsRef = useRef<Animation[]>([])
 
-
-  function cancelLayoutAnimations() {
-    const run = ++layoutAnimationRunRef.current
-    layoutAnimationsRef.current.forEach(animation => animation.cancel())
-    layoutAnimationsRef.current = []
-
-    const transitioningContainer = pageRef.current?.querySelector<HTMLElement>('.posts.is-layout-transitioning')
-    if (transitioningContainer) {
-      window.requestAnimationFrame(() => {
-        if (run === layoutAnimationRunRef.current) {
-          transitioningContainer.classList.remove('is-layout-transitioning')
-        }
-      })
-    }
-  }
 
   function clearActivePageTransition() {
     activePageAnimationsRef.current.forEach(animation => animation.cancel())
@@ -93,9 +75,6 @@ export default function App() {
     }
 
     if (nextPostId === navigationTargetRef.current) return
-
-    // A route transition must never compete with an unfinished card FLIP.
-    if (layoutAnimationsRef.current.length > 0) cancelLayoutAnimations()
 
     transitionLockRef.current = true
     const transitionId = ++transitionIdRef.current
@@ -325,92 +304,24 @@ export default function App() {
     if (!snapshot) return
     layoutSnapshotRef.current = null
 
-    const container = pageRef.current?.querySelector<HTMLElement>('.posts')
-    if (!container) return
+    // Layout changes are intentionally not animated: animating every card
+    // across a live grid causes card collisions and visible flashes. Keep the
+    // first visible card pinned instead, so the viewport does not jump.
+    if (snapshot.anchorPostId === null || snapshot.anchorTop === null) return
 
-    const run = ++layoutAnimationRunRef.current
-    layoutAnimationsRef.current.forEach(animation => animation.cancel())
-    layoutAnimationsRef.current = []
-    container.classList.add('is-layout-transitioning')
-
-    const links = Array.from(
-      container.querySelectorAll<HTMLElement>('.post-link[data-post-id]'),
+    const anchor = pageRef.current?.querySelector<HTMLElement>(
+      '.posts .post-link[data-post-id="' + snapshot.anchorPostId + '"]',
     )
+    const anchorBounds = anchor?.getBoundingClientRect()
+    if (!anchorBounds) return
 
-    if (snapshot.anchorPostId !== null && snapshot.anchorTop !== null) {
-      const anchor = links.find(link => link.dataset.postId === snapshot.anchorPostId)
-      const anchorBounds = anchor?.getBoundingClientRect()
-      if (anchorBounds) {
-        const correctedScrollY = Math.max(
-          0,
-          snapshot.scrollY + anchorBounds.top - snapshot.anchorTop,
-        )
-        if (Math.abs(correctedScrollY - window.scrollY) > 1) {
-          window.scrollTo(0, correctedScrollY)
-        }
-      }
+    const correctedScrollY = Math.max(
+      0,
+      snapshot.scrollY + anchorBounds.top - snapshot.anchorTop,
+    )
+    if (Math.abs(correctedScrollY - window.scrollY) > 1) {
+      window.scrollTo(0, correctedScrollY)
     }
-
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      container.classList.remove('is-layout-transitioning')
-      return
-    }
-
-    const animations: Animation[] = []
-
-    links.forEach(link => {
-      const id = link.dataset.postId
-      const previous = id ? snapshot.positions.get(id) : undefined
-      if (!previous) return
-
-      const next = link.getBoundingClientRect()
-      const deltaX = previous.left - next.left
-      const deltaY = previous.top - next.top
-
-      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) return
-
-      const animation = link.animate(
-        [
-          {
-            transform: 'translate3d(' + deltaX + 'px, ' + deltaY + 'px, 0)',
-            opacity: .82,
-          },
-          {
-            transform: 'translate3d(0, 0, 0)',
-            opacity: 1,
-          },
-        ],
-        {
-          duration: 390,
-          easing: 'cubic-bezier(.2, .82, .2, 1)',
-          fill: 'both',
-        },
-      )
-
-      animations.push(animation)
-    })
-
-    layoutAnimationsRef.current = animations
-
-    if (animations.length === 0) {
-      container.classList.remove('is-layout-transitioning')
-      return
-    }
-
-    Promise.all(animations.map(animation => animation.finished.catch(() => undefined))).then(() => {
-      if (run !== layoutAnimationRunRef.current) return
-
-      animations.forEach(animation => animation.cancel())
-      layoutAnimationsRef.current = []
-
-      // Cancel while CSS transitions are still disabled, then restore hover
-      // behavior on the next frame. This prevents a second, visible snap.
-      window.requestAnimationFrame(() => {
-        if (run === layoutAnimationRunRef.current) {
-          container.classList.remove('is-layout-transitioning')
-        }
-      })
-    })
   }, [viewMode])
 
   useEffect(() => {
@@ -493,34 +404,27 @@ export default function App() {
 
   function handleLayoutToggle() {
     if (transitionLockRef.current) return
-    cancelLayoutAnimations()
 
-    const positions = new Map<string, DOMRect>()
     const links = Array.from(
       pageRef.current?.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]') ?? [],
     )
     let anchorPostId: string | null = null
     let anchorTop: number | null = null
 
-    links.forEach(link => {
+    // Use the first visible article as a stable visual anchor.
+    for (const link of links) {
       const id = link.dataset.postId
-      if (!id) return
+      if (!id) continue
 
       const bounds = link.getBoundingClientRect()
-      positions.set(id, bounds)
-
-      if (
-        anchorPostId === null &&
-        bounds.bottom > 56 &&
-        bounds.top < window.innerHeight
-      ) {
+      if (bounds.bottom > 56 && bounds.top < window.innerHeight) {
         anchorPostId = id
         anchorTop = bounds.top
+        break
       }
-    })
+    }
 
     layoutSnapshotRef.current = {
-      positions,
       scrollY: window.scrollY,
       anchorPostId,
       anchorTop,
