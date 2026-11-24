@@ -11,7 +11,7 @@ type PostCardProps = {
 export function PostCard({ post, mode, index, articleClassName }: PostCardProps) {
   if (mode === 'compact') {
     return (
-      <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card"><article className={articleClassName} tabIndex={0}>
+      <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article className={articleClassName} tabIndex={0}>
         <div className="compact-copy">
           <span className="post-category">{post.category}</span>
           <span className="compact-title">{post.title}</span>
@@ -23,7 +23,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
 
   if (mode === 'magazine') {
     return (
-      <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card"><article
+      <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article
         className={`${articleClassName}${index === 0 ? ' is-featured' : ''}`}
         tabIndex={0}
       >
@@ -36,7 +36,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
 
   if (mode === 'grid') {
     return (
-      <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card"><article className={articleClassName} tabIndex={0}>
+      <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article className={articleClassName} tabIndex={0}>
         <div className="post-kicker">{post.category}</div>
         <h4 className="soft-emboss soft-emboss--glass">{post.title}</h4>
         <p>{post.excerpt}</p>
@@ -46,7 +46,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
   }
 
   return (
-    <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card"><article className={articleClassName} tabIndex={0}>
+    <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article className={articleClassName} tabIndex={0}>
       <h4 className="soft-emboss soft-emboss--glass">{post.title}</h4>
       <p>{post.excerpt}</p>
       <div className="post-meta">
