@@ -496,6 +496,7 @@ export default function App() {
   }
 
   function handleLayoutToggle() {
+    if (transitionLockRef.current) return
     cancelLayoutAnimations()
 
     const positions = new Map<string, DOMRect>()
