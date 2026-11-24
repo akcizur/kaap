@@ -13,6 +13,7 @@ import { PostCard } from './components/PostCard'
 import { posts } from './data/posts'
 import { VIEW_MODE_ORDER, VIEW_MODES } from './config/viewModes'
 import { usePreferences } from './hooks/usePreferences'
+import { MOTION, motionDirector, type MotionHandle } from './motion'
 
 export default function App() {
   const { preferences, updatePreference } = usePreferences()
@@ -20,6 +21,12 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const searchButtonRef = useRef<HTMLButtonElement>(null)
+  const layoutIconRef = useRef<HTMLSpanElement>(null)
+  const themeIconRef = useRef<HTMLSpanElement>(null)
+  const searchIconRef = useRef<HTMLSpanElement>(null)
+  const previousViewModeRef = useRef(viewMode)
+  const previousThemeRef = useRef(preferences.theme)
+  const previousSearchOpenRef = useRef(searchOpen)
   const layoutSnapshotRef = useRef<{
     scrollY: number
     anchorPostId: string | null
@@ -44,12 +51,13 @@ export default function App() {
   const historyIndexRef = useRef(0)
   const historyBackPendingRef = useRef(false)
   const transitionIdRef = useRef(0)
-  const activePageAnimationsRef = useRef<Animation[]>([])
+  const activePageAnimationsRef = useRef<MotionHandle[]>([])
 
 
   function clearActivePageTransition() {
     activePageAnimationsRef.current.forEach(animation => animation.cancel())
     activePageAnimationsRef.current = []
+    motionDirector.endRoute()
 
     pageRef.current?.classList.remove('is-route-transitioning')
     headerRef.current?.classList.remove('is-route-transitioning')
@@ -84,7 +92,7 @@ export default function App() {
     const transitionId = ++transitionIdRef.current
     navigationTargetRef.current = nextPostId
     const page = pageRef.current
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduceMotion = motionDirector.prefersReducedMotion()
 
     try {
       if (!page || typeof page.animate !== 'function' || reduceMotion) {
@@ -96,9 +104,9 @@ export default function App() {
         return
       }
 
-      // The route wrapper is the only animated surface. Disable every
-      // nested/header transition so hover, search and theme motion cannot
-      // compete with the directional page movement.
+      // Lock the motion runtime before touching the page. This cancels any
+      // running control motion and prevents another channel from starting.
+      motionDirector.beginRoute()
       page.classList.add('is-route-transitioning')
       headerRef.current?.classList.add('is-route-transitioning')
       page.style.pointerEvents = 'none'
@@ -106,27 +114,27 @@ export default function App() {
 
       // Strictly serial motion: the current page leaves completely before
       // React swaps its content. No shared overlay, crossfade, or title reveal.
-      const outgoingX = direction === 'forward' ? -22 : 22
+      const outgoingX = direction === 'forward'
+        ? -MOTION.page.distance
+        : MOTION.page.distance
       const incomingX = -outgoingX
-      const outgoingAnimation = page.animate(
-        [
+      const outgoingMotion = motionDirector.play({
+        channel: 'route',
+        element: page,
+        keyframes: [
           { transform: 'translate3d(0, 0, 0)' },
           { transform: 'translate3d(' + outgoingX + 'px, 0, 0)' },
         ],
-        {
-          duration: 190,
-          easing: 'cubic-bezier(.55, 0, .8, .35)',
-          fill: 'forwards',
-        },
-      )
-      activePageAnimationsRef.current = [outgoingAnimation]
-      await outgoingAnimation.finished.catch(() => undefined)
+        timing: MOTION.page.exit,
+      })
+      activePageAnimationsRef.current = [outgoingMotion]
+      await outgoingMotion.finished
       if (transitionId !== transitionIdRef.current) return
 
       // Pin the exact final frame inline BEFORE canceling the WAAPI effect.
       // This prevents the browser from briefly restoring the page's origin.
       page.style.transform = 'translate3d(' + outgoingX + 'px, 0, 0)'
-      outgoingAnimation.cancel()
+      outgoingMotion.cancel()
       activePageAnimationsRef.current = []
       page.style.visibility = 'hidden'
 
@@ -141,24 +149,22 @@ export default function App() {
       // Set the incoming pose while hidden, then reveal and animate only once.
       page.style.transform = 'translate3d(' + incomingX + 'px, 0, 0)'
       page.style.visibility = ''
-      const incomingAnimation = page.animate(
-        [
+      const incomingMotion = motionDirector.play({
+        channel: 'route',
+        element: page,
+        keyframes: [
           { transform: 'translate3d(' + incomingX + 'px, 0, 0)' },
           { transform: 'translate3d(0, 0, 0)' },
         ],
-        {
-          duration: 260,
-          easing: 'cubic-bezier(.2, .82, .2, 1)',
-          fill: 'forwards',
-        },
-      )
-      activePageAnimationsRef.current = [incomingAnimation]
-      await incomingAnimation.finished.catch(() => undefined)
+        timing: MOTION.page.enter,
+      })
+      activePageAnimationsRef.current = [incomingMotion]
+      await incomingMotion.finished
       if (transitionId !== transitionIdRef.current) return
 
       // As above, make the final frame the base style before canceling.
       page.style.transform = 'none'
-      incomingAnimation.cancel()
+      incomingMotion.cancel()
       activePageAnimationsRef.current = []
     } catch {
       // Recover visibly and deterministically if an animation is interrupted.
@@ -334,6 +340,56 @@ export default function App() {
   }, [viewMode])
 
   useEffect(() => {
+    if (previousViewModeRef.current === viewMode) return
+    previousViewModeRef.current = viewMode
+    const element = layoutIconRef.current
+    if (!element) return
+    const motion = motionDirector.play({
+      channel: 'control', element,
+      keyframes: [
+        { opacity: .52, transform: 'translate3d(0, 2px, 0) rotate(-12deg) scale(.94)' },
+        { opacity: 1, transform: 'translate3d(0, 0, 0) rotate(0) scale(1)' },
+      ],
+      timing: MOTION.control.icon,
+    })
+    return () => motion.cancel()
+  }, [viewMode])
+
+  useEffect(() => {
+    if (previousThemeRef.current === preferences.theme) return
+    previousThemeRef.current = preferences.theme
+    const element = themeIconRef.current
+    if (!element) return
+    const rotation = preferences.theme === 'dark' ? -72 : 72
+    const motion = motionDirector.play({
+      channel: 'control', element,
+      keyframes: [
+        { opacity: .58, transform: 'rotate(' + rotation + 'deg) scale(.86)' },
+        { opacity: 1, transform: 'rotate(0) scale(1)' },
+      ],
+      timing: MOTION.control.icon,
+    })
+    return () => motion.cancel()
+  }, [preferences.theme])
+
+  useEffect(() => {
+    if (previousSearchOpenRef.current === searchOpen) return
+    previousSearchOpenRef.current = searchOpen
+    const element = searchIconRef.current
+    if (!element) return
+    const rotation = searchOpen ? 72 : -72
+    const motion = motionDirector.play({
+      channel: 'control', element,
+      keyframes: [
+        { opacity: .58, transform: 'rotate(' + rotation + 'deg) scale(.84)' },
+        { opacity: 1, transform: 'rotate(0) scale(1)' },
+      ],
+      timing: MOTION.control.icon,
+    })
+    return () => motion.cancel()
+  }, [searchOpen])
+
+  useEffect(() => {
     // This app owns scroll restoration because each history entry stores its
     // own position. Native restoration can otherwise race the shared morph.
     const previousScrollRestoration = window.history.scrollRestoration
@@ -466,7 +522,7 @@ export default function App() {
               title={`Layout: ${VIEW_MODES[viewMode].label}`}
               aria-label={`Change layout. Current: ${VIEW_MODES[viewMode].label}`}
             >
-              <span key={viewMode} className="nav-icon-swap nav-icon-swap--layout-next" aria-hidden="true">
+              <span ref={layoutIconRef} key={viewMode} className="nav-icon-swap nav-icon-swap--layout-next" aria-hidden="true">
                 {(() => {
                   const ViewIcon = VIEW_MODES[viewMode].icon
                   return <ViewIcon className="ui-icon" size={15} strokeWidth={2} />
@@ -482,7 +538,7 @@ export default function App() {
               title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
               aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
             >
-              <span key={theme} className={'nav-icon-swap nav-icon-swap--theme-' + theme} aria-hidden="true">
+              <span ref={themeIconRef} key={theme} className={'nav-icon-swap nav-icon-swap--theme-' + theme} aria-hidden="true">
                 {theme === 'light' ? (
                   <Sun className="ui-icon" size={15} strokeWidth={2} />
                 ) : (
@@ -502,7 +558,7 @@ export default function App() {
               aria-expanded={searchOpen}
               aria-controls="navbar-search"
             >
-              <span key={searchOpen ? 'close' : 'search'} className={'nav-icon-swap nav-icon-swap--search-' + (searchOpen ? 'open' : 'closed')} aria-hidden="true">
+              <span ref={searchIconRef} key={searchOpen ? 'close' : 'search'} className={'nav-icon-swap nav-icon-swap--search-' + (searchOpen ? 'open' : 'closed')} aria-hidden="true">
                 {searchOpen ? (
                   <X className="ui-icon" size={15} strokeWidth={2} />
                 ) : (
