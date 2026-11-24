@@ -113,6 +113,7 @@ export default function App() {
     ) {
       selectedPostIdRef.current = nextPostId
       setSelectedPostId(nextPostId)
+      await waitForPaint()
       window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
       return
     }
@@ -156,10 +157,19 @@ export default function App() {
     page.style.visibility = 'hidden'
     selectedPostIdRef.current = nextPostId
     setSelectedPostId(nextPostId)
-    window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
+    window.scrollTo(0, 0)
 
     await waitForPaint()
     if (transitionId !== transitionIdRef.current) return
+
+    // Wait until the destination list has expanded the document before
+    // restoring a deep scroll position. Otherwise the old article height can
+    // clamp window.scrollY back to zero.
+    if (nextPostId === null && restoreScrollY > 0) {
+      window.scrollTo(0, restoreScrollY)
+      await waitForPaint()
+      if (transitionId !== transitionIdRef.current) return
+    }
 
     page.style.visibility = ''
 
