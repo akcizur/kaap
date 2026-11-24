@@ -2349,3 +2349,28 @@ button {
     will-change: auto;
   }
 }
+
+
+/* Stable viewport geometry and scroll anchoring during layout transitions. */
+html {
+  scrollbar-gutter: stable;
+}
+
+.app,
+.page-stage,
+.page-transition {
+  overflow-anchor: none;
+}
+
+/* FLIP owns the card transform while active. Suppress hover transitions so
+   canceling the Web Animation cannot start a second, visible snap. */
+.posts.is-layout-transitioning .post-link,
+.posts.is-layout-transitioning .post-link .post {
+  transition: none !important;
+}
+
+.posts.is-layout-transitioning .post-link .post,
+.posts.is-layout-transitioning .post-link:hover .post,
+.posts.is-layout-transitioning .post-link:active .post {
+  transform: none !important;
+}
