@@ -2210,3 +2210,40 @@ button {
     inset 0 1px 0 var(--glass-highlight),
     0 0 0 3px rgba(128, 137, 153, .09);
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Search panel layout fix — expand the sticky header instead of overlaying it */
+/* -------------------------------------------------------------------------- */
+
+.site-header {
+  height: auto;
+  min-height: 56px;
+}
+
+.nav-panel {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  width: 100%;
+  z-index: 49;
+}
+
+.nav-search-input:focus-visible {
+  outline: none;
+}
+
+.nav-search:focus-within {
+  border-color: var(--border-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    0 0 0 2px color-mix(in srgb, var(--text-soft) 24%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-panel,
+  .nav-panel.is-open {
+    max-height: none;
+  }
+}
