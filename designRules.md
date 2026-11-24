@@ -460,23 +460,23 @@ Nemá se měnit na dashboard widget.
 
 ## 21. Magazine mode
 
-První post je featured.
+The first post is featured; following posts use compact editorial rows.
 
 Featured:
+- 26px vertical / 28px horizontal padding on desktop,
+- 20px padding on mobile,
+- border and subtle glass surface,
+- larger title and excerpt,
+- 12px separation before the following rows.
 
-- větší padding,
-- border,
-- surface,
-- větší title,
-- excerpt.
+Other posts:
+- 15px vertical / 4px horizontal padding on desktop,
+- 13px vertical / 2px horizontal padding on mobile,
+- no individual glass card, border, or shadow,
+- one quiet bottom separator,
+- compact kicker/title spacing.
 
-Ostatní:
-
-- jednodušší rows,
-- border-bottom,
-- menší title.
-
-Hierarchie vzniká velikostí a spacingem, nikoli barvou.
+Magazine must read as one featured story followed by an editorial sequence, not a stack of equally weighted cards.
 
 ---
 
