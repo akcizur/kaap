@@ -2247,3 +2247,69 @@ button {
     max-height: none;
   }
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Magazine layout — deliberate featured/row spacing                          */
+/* -------------------------------------------------------------------------- */
+
+.posts-magazine {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.posts-magazine .post-link {
+  border-radius: 0;
+}
+
+.posts-magazine .post-magazine:not(.is-featured) {
+  padding: 15px 4px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.posts-magazine .post-magazine.is-featured {
+  margin-bottom: 12px;
+  padding: 26px 28px;
+}
+
+.posts-magazine .post-magazine:not(.is-featured) .post-kicker {
+  margin-bottom: 7px;
+}
+
+.posts-magazine .post-magazine:not(.is-featured) h4 {
+  margin: 0;
+}
+
+.posts-magazine .post-link:hover .post-magazine:not(.is-featured) {
+  transform: translateY(-1px);
+  border-color: var(--border-soft);
+  background: transparent;
+  box-shadow: none;
+  opacity: .76;
+}
+
+.posts-magazine .post-link:active .post-magazine:not(.is-featured) {
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .posts-magazine .post-magazine.is-featured {
+    margin-bottom: 9px;
+    padding: 20px;
+  }
+
+  .posts-magazine .post-magazine:not(.is-featured) {
+    padding: 13px 2px 14px;
+  }
+
+  .posts-magazine .post-magazine:not(.is-featured) .post-kicker {
+    margin-bottom: 6px;
+  }
+}
