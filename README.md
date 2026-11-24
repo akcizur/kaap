@@ -944,7 +944,7 @@ Motion is split into two managed channels:
 
 CSS owns hover and surface feedback. Web Animations API owns route movement and icon glyph transforms. One element/property must never have two animation owners.
 
-Layout switches are intentionally immediate. The current visible post is used as a scroll anchor; per-card FLIP is disabled to avoid crossing paths and flashes. Reduced-motion preferences return idle motion handles and keep navigation immediate.
+Layout switches use shared-element View Transitions: each article keeps a stable identity while moving between List, Grid, Magazine and Compact without a page reload. Older browsers use a measured FLIP fallback for visible cards. The first visible article remains pinned to its viewport position, and reduced-motion preferences keep layout changes immediate.
 
 Article navigation uses a cinematic, direction-aware depth move. The current page exits first, then the destination enters from the opposite side with a restrained Y rotation and focus blur; Back and Forward reverse the travel direction. The two pages never overlap. The layout control is intentionally hidden while an article detail is open.
 

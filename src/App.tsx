@@ -31,7 +31,10 @@ export default function App() {
     scrollY: number
     anchorPostId: string | null
     anchorTop: number | null
+    positions: Map<string, { left: number; top: number; width: number; height: number }>
+    nativeTransition: boolean
   } | null>(null)
+  const layoutTransitionLockRef = useRef(false)
   const transitionLockRef = useRef(false)
   const queuedNavigationRef = useRef<{
     postId: number | null
@@ -337,24 +340,98 @@ export default function App() {
     if (!snapshot) return
     layoutSnapshotRef.current = null
 
-    // Layout changes are intentionally not animated: animating every card
-    // across a live grid causes card collisions and visible flashes. Keep the
-    // first visible card pinned instead, so the viewport does not jump.
-    if (snapshot.anchorPostId === null || snapshot.anchorTop === null) return
-
-    const anchor = pageRef.current?.querySelector<HTMLElement>(
-      '.posts .post-link[data-post-id="' + snapshot.anchorPostId + '"]',
-    )
-    const anchorBounds = anchor?.getBoundingClientRect()
-    if (!anchorBounds) return
-
-    const correctedScrollY = Math.max(
-      0,
-      snapshot.scrollY + anchorBounds.top - snapshot.anchorTop,
-    )
-    if (Math.abs(correctedScrollY - window.scrollY) > 1) {
-      window.scrollTo(0, correctedScrollY)
+    // Keep the same article at the same viewport coordinate after the new
+    // layout has committed. This prevents a grid/list height change from
+    // pulling the reader to a different part of the page.
+    if (snapshot.anchorPostId !== null && snapshot.anchorTop !== null) {
+      const anchor = pageRef.current?.querySelector<HTMLElement>(
+        '.posts .post-link[data-post-id="' + snapshot.anchorPostId + '"]',
+      )
+      const anchorBounds = anchor?.getBoundingClientRect()
+      if (anchorBounds) {
+        const correctedScrollY = Math.max(
+          0,
+          snapshot.scrollY + anchorBounds.top - snapshot.anchorTop,
+        )
+        if (Math.abs(correctedScrollY - window.scrollY) > 1) {
+          window.scrollTo(0, correctedScrollY)
+        }
+      }
     }
+
+    // Native shared-element transitions move stable article identities between
+    // layouts. Older browsers use a measured FLIP fallback on visible cards.
+    if (snapshot.nativeTransition) return
+    if (motionDirector.prefersReducedMotion()) {
+      layoutTransitionLockRef.current = false
+      return
+    }
+
+    const page = pageRef.current
+    if (!page) {
+      layoutTransitionLockRef.current = false
+      return
+    }
+
+    const animations: Animation[] = []
+    const links = page.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]')
+    for (const link of links) {
+      const id = link.dataset.postId
+      if (!id) continue
+      const first = snapshot.positions.get(id)
+      if (!first) continue
+
+      const last = link.getBoundingClientRect()
+      if (last.bottom <= 0 || last.top >= window.innerHeight) continue
+
+      const dx = first.left - last.left
+      const dy = first.top - last.top
+      const scaleX = first.width / Math.max(last.width, 1)
+      const scaleY = first.height / Math.max(last.height, 1)
+      if (
+        Math.abs(dx) < 1 &&
+        Math.abs(dy) < 1 &&
+        Math.abs(scaleX - 1) < .01 &&
+        Math.abs(scaleY - 1) < .01
+      ) continue
+
+      try {
+        const animation = link.animate(
+          [
+            {
+              transform: 'translate3d(' + dx + 'px, ' + dy + 'px, 0) scale(' + scaleX + ', ' + scaleY + ')',
+              transformOrigin: 'top left',
+            },
+            {
+              transform: 'translate3d(0, 0, 0) scale(1, 1)',
+              transformOrigin: 'top left',
+            },
+          ],
+          {
+            duration: 480,
+            easing: 'cubic-bezier(.2, .82, .2, 1)',
+            fill: 'both',
+          },
+        )
+        animations.push(animation)
+      } catch {
+        // A single card failing to animate must not block the new layout.
+      }
+    }
+
+    if (animations.length === 0) {
+      layoutTransitionLockRef.current = false
+      return
+    }
+
+    page.classList.add('is-layout-transitioning')
+    void Promise.all(animations.map(animation =>
+      animation.finished.catch(() => undefined),
+    )).then(() => {
+      animations.forEach(animation => animation.cancel())
+      page.classList.remove('is-layout-transitioning')
+      layoutTransitionLockRef.current = false
+    })
   }, [viewMode])
 
   useEffect(() => {
@@ -489,35 +566,73 @@ export default function App() {
   }
 
   function handleLayoutToggle() {
-    if (transitionLockRef.current) return
+    if (transitionLockRef.current || layoutTransitionLockRef.current || selectedPostId !== null) return
 
     const links = Array.from(
       pageRef.current?.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]') ?? [],
     )
     let anchorPostId: string | null = null
     let anchorTop: number | null = null
+    const positions = new Map<string, { left: number; top: number; width: number; height: number }>()
 
-    // Use the first visible article as a stable visual anchor.
+    // Capture stable identities and geometry before React changes the layout.
+    // The same measurements power the compatibility FLIP fallback.
     for (const link of links) {
       const id = link.dataset.postId
       if (!id) continue
-
       const bounds = link.getBoundingClientRect()
-      if (bounds.bottom > 56 && bounds.top < window.innerHeight) {
+      positions.set(id, {
+        left: bounds.left,
+        top: bounds.top,
+        width: bounds.width,
+        height: bounds.height,
+      })
+
+      if (
+        anchorPostId === null &&
+        bounds.bottom > 56 &&
+        bounds.top < window.innerHeight
+      ) {
         anchorPostId = id
         anchorTop = bounds.top
-        break
       }
-    }
-
-    layoutSnapshotRef.current = {
-      scrollY: window.scrollY,
-      anchorPostId,
-      anchorTop,
     }
 
     const index = VIEW_MODE_ORDER.indexOf(viewMode)
     const nextMode = VIEW_MODE_ORDER[(index + 1) % VIEW_MODE_ORDER.length]
+    const snapshot = {
+      scrollY: window.scrollY,
+      anchorPostId,
+      anchorTop,
+      positions,
+      nativeTransition: false,
+    }
+    layoutSnapshotRef.current = snapshot
+    layoutTransitionLockRef.current = true
+
+    const nextLayout = () => flushSync(() => updatePreference('viewMode', nextMode))
+    const transitionDocument = document as Document & {
+      startViewTransition?: (callback: () => void) => { finished: Promise<void> }
+    }
+
+    // View Transitions moves shared article identities without reloading.
+    // The measured FLIP animation remains the fallback for older browsers.
+    if (
+      !motionDirector.prefersReducedMotion() &&
+      typeof transitionDocument.startViewTransition === 'function'
+    ) {
+      snapshot.nativeTransition = true
+      try {
+        const transition = transitionDocument.startViewTransition(nextLayout)
+        void transition.finished
+          .catch(() => undefined)
+          .finally(() => { layoutTransitionLockRef.current = false })
+        return
+      } catch {
+        snapshot.nativeTransition = false
+      }
+    }
+
     updatePreference('viewMode', nextMode)
   }
   function handleThemeToggle() {

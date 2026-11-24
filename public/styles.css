@@ -2486,3 +2486,86 @@ html {
     backface-visibility: visible;
   }
 }
+
+
+/* Light theme correction: restore readable ink, neutral glass rims and a
+   clearer separation between the canvas and translucent surfaces. */
+:root:not([data-theme='dark']) {
+  color-scheme: light;
+  --bg: #f3f4f6;
+  --surface: rgba(255, 255, 255, .86);
+  --surface-strong: rgba(255, 255, 255, .96);
+  --surface-dark: rgba(249, 250, 252, .94);
+  --text: #171a20;
+  --text-muted: #4b5563;
+  --text-soft: #626d7a;
+  --text-faint: #707b89;
+  --text-subtle: #818c9a;
+  --border: rgba(24, 32, 44, .115);
+  --border-soft: rgba(24, 32, 44, .085);
+  --border-strong: rgba(24, 32, 44, .17);
+  --accent: #171a20;
+  --accent-contrast: #fff;
+  --header-bg: rgba(249, 250, 252, .9);
+  --glass-fill: rgba(255, 255, 255, .8);
+  --glass-fill-strong: rgba(255, 255, 255, .95);
+  --glass-edge: rgba(28, 36, 48, .105);
+  --glass-highlight: rgba(255, 255, 255, .96);
+  --glass-shadow: 0 8px 26px rgba(27, 36, 50, .055), inset 0 1px 0 rgba(255, 255, 255, .96);
+  --glass-shadow-hover: 0 15px 34px rgba(27, 36, 50, .09), inset 0 1px 0 rgba(255, 255, 255, .98);
+  --emboss-light: rgba(255, 255, 255, .92);
+  --emboss-light-soft: rgba(255, 255, 255, .58);
+  --emboss-shade: rgba(26, 33, 43, .16);
+  --emboss-shade-soft: rgba(26, 33, 43, .085);
+}
+
+:root:not([data-theme='dark']) .app {
+  background:
+    radial-gradient(ellipse at 50% -18%, rgba(255, 255, 255, .94), transparent 52%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+:root:not([data-theme='dark']) .site-header {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .72);
+}
+
+/* Shared-element layout motion. Each post keeps the same unique name through
+   list, grid, magazine and compact, so its visual surface travels in place. */
+@supports (view-transition-name: none) {
+  ::view-transition-group(*) {
+    animation-duration: 480ms;
+    animation-timing-function: cubic-bezier(.2, .82, .2, 1);
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    height: 100%;
+  }
+
+  ::view-transition-group(root) {
+    animation-duration: 1ms;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* Compatibility path used when the browser has no View Transitions API. */
+.page-transition.is-layout-transitioning .post-link {
+  pointer-events: none;
+}
+
+.page-transition.is-layout-transitioning .post {
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: .01ms !important;
+  }
+}

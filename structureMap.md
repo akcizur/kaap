@@ -207,4 +207,4 @@ src/motion/index.ts je jediným runtime vlastníkem WAAPI animací.
 - play() vrací cancellable MotionHandle.
 - prefersReducedMotion() poskytuje společné rozhodnutí pro okamžitou variantu.
 
-CSS tokeny v public/styles.css odpovídají stejné timing stupnici. Layout switch nepoužívá FLIP; obnovuje pouze scroll anchor.
+CSS tokeny v public/styles.css odpovídají stejné timing stupnici. Layout switch používá shared-element View Transitions a měřený FLIP fallback; zachovává scroll anchor bez reloadu.

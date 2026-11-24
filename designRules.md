@@ -586,7 +586,7 @@ Timing a easing se řídí společným frameworkem v src/motion/index.ts a CSS t
 - route exit: 190ms,
 - route enter: 260ms.
 
-Používej opacity, color, background-color, border-color a malé transformace. Layout změna zůstává okamžitá se zachováním scroll anchoru. Trvalé dekorativní smyčky nejsou povolené.
+Používej opacity, color, background-color, border-color a malé transformace. Layout změna používá shared-element View Transitions; starší prohlížeče mají měřený FLIP fallback. Zachovej scroll anchor a zabraň překryvu interakcí během přesunu. Trvalé dekorativní smyčky nejsou povolené.
 
 ## 28. Responsive rules
 
@@ -748,7 +748,7 @@ Runtime je v src/motion/index.ts. Exportuje MOTION presety, motionDirector, Moti
 Otevření článku posílá seznam doleva a detail vstupuje zprava. Zpět a Forward používají opačný směr. Odchozí animace se dokončí a připne před výměnou obsahu; vstupní začne až po commitu nové stránky. Žádný crossfade ani překryv dvou stránek.
 
 ### Layout a scroll
-Přepnutí List, Grid, Magazine a Compact je okamžité. První viditelný článek slouží jako scroll anchor. Per-card FLIP se nepoužívá, protože trajektorie karet se mohou křížit a způsobit blikání.
+Přepnutí List, Grid, Magazine a Compact používá native shared-element View Transitions bez reloadu. Každý článek má stabilní view-transition-name podle ID, takže se jeho vizuální plocha přesune do nové pozice. V prohlížečích bez API se používá měřený FLIP fallback viditelných karet. První viditelný článek zůstává scroll anchorem a interakce karet je během přesunu dočasně pozastavena.
 
 ### Přerušení a přístupnost
 Každá WAAPI animace má cancel handle. Route cleanup uklidí aktivní efekty a uvolní zámek. Runtime kontroluje prefers-reduced-motion při každém spuštění a v tomto režimu používá okamžitou variantu. Všechny ovládací prvky zůstávají ovladatelné klávesnicí.
