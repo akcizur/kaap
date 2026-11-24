@@ -550,6 +550,11 @@ export default function App() {
   }, [viewMode])
 
   useEffect(() => {
+    // This app owns scroll restoration because each history entry stores its
+    // own position. Native restoration can otherwise race the shared morph.
+    const previousScrollRestoration = window.history.scrollRestoration
+    window.history.scrollRestoration = 'manual'
+
     // Store a monotonic index in each app-managed history entry so Back and
     // Forward can animate in opposite directions.
     const currentState = window.history.state ?? {}
@@ -581,7 +586,10 @@ export default function App() {
     }
 
     window.addEventListener('popstate', syncPost)
-    return () => window.removeEventListener('popstate', syncPost)
+    return () => {
+      window.removeEventListener('popstate', syncPost)
+      window.history.scrollRestoration = previousScrollRestoration
+    }
   }, [])
 
   useEffect(() => {
