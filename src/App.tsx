@@ -41,12 +41,14 @@ export default function App() {
     element: HTMLElement
     opacity: string
     transform: string
+    filter: string
   }>>([])
 
   function restoreTransitionItemStyles() {
-    transitionItemStylesRef.current.forEach(({ element, opacity, transform }) => {
+    transitionItemStylesRef.current.forEach(({ element, opacity, transform, filter }) => {
       element.style.opacity = opacity
       element.style.transform = transform
+      element.style.filter = filter
     })
     transitionItemStylesRef.current = []
   }
@@ -79,6 +81,21 @@ export default function App() {
         window.requestAnimationFrame(() => resolve())
       })
     })
+  }
+
+  async function finishPageTransition(transitionId: number, maxWait = 1200) {
+    const animations = [...activePageAnimationsRef.current]
+    let timeoutId: number | undefined
+
+    await Promise.race([
+      Promise.all(animations.map(animation => animation.finished.catch(() => undefined))),
+      new Promise<void>(resolve => {
+        timeoutId = window.setTimeout(resolve, maxWait)
+      }),
+    ])
+
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+    if (transitionId === transitionIdRef.current) clearActivePageTransition()
   }
 
   async function transitionToPost(
@@ -259,10 +276,12 @@ export default function App() {
         element,
         opacity: element.style.opacity,
         transform: element.style.transform,
+        filter: element.style.filter,
       }))
       transitionItems.forEach(element => {
         element.style.opacity = '0'
-        element.style.transform = 'translate3d(0, 9px, 0)'
+        element.style.transform = 'none'
+        element.style.filter = 'blur(9px)'
       })
 
       const sharedAnimation = sharedElement.animate(
@@ -311,7 +330,10 @@ export default function App() {
       )
 
       const outgoingAnimation = previousPage.animate(
-        [{ opacity: 1 }, { opacity: .12 }],
+        [
+          { opacity: 1, filter: 'blur(0px)' },
+          { opacity: 0, filter: 'blur(9px)' },
+        ],
         {
           duration: 470,
           easing: 'cubic-bezier(.2, .78, .2, 1)',
@@ -320,8 +342,8 @@ export default function App() {
       )
       const incomingAnimation = page.animate(
         [
-          { opacity: .92, transform: 'translate3d(0, 8px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+          { opacity: 0, filter: 'blur(9px)' },
+          { opacity: 1, filter: 'blur(0px)' },
         ],
         {
           duration: 390,
@@ -331,8 +353,8 @@ export default function App() {
       )
       const revealAnimation = sharedTarget.animate(
         [
-          { opacity: 0, transform: 'translate3d(0, 7px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+          { opacity: 0, filter: 'blur(9px)' },
+          { opacity: 1, filter: 'blur(0px)' },
         ],
         {
           duration: 190,
@@ -344,8 +366,8 @@ export default function App() {
       const itemAnimations = transitionItems.map((item, index) =>
         item.animate(
           [
-            { opacity: 0, transform: 'translate3d(0, 9px, 0)' },
-            { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+            { opacity: 0, filter: 'blur(9px)' },
+            { opacity: 1, filter: 'blur(0px)' },
           ],
           {
             duration: 390,
@@ -364,14 +386,7 @@ export default function App() {
         ...itemAnimations,
       ]
 
-      await Promise.all(
-        activePageAnimationsRef.current.map(animation =>
-          animation.finished.catch(() => undefined),
-        ),
-      )
-
-      if (transitionId !== transitionIdRef.current) return
-      clearActivePageTransition()
+      await finishPageTransition(transitionId, 1000)
       return
     }
 
@@ -386,42 +401,39 @@ export default function App() {
       element,
       opacity: element.style.opacity,
       transform: element.style.transform,
+      filter: element.style.filter,
     }))
     transitionItems.forEach(element => {
       element.style.opacity = '0'
-      element.style.transform = 'translate3d(0, 14px, 0)'
+      element.style.transform = 'none'
+      element.style.filter = 'blur(9px)'
     })
 
-    const outgoingX = direction === 'back'
-      ? 'calc(100% - 32px)'
-      : 'calc(-100% + 32px)'
-    const incomingX = direction === 'back' ? '-100%' : '100%'
-
     const pageTiming: KeyframeAnimationOptions = {
-      duration: direction === 'back' ? 700 : 760,
+      duration: direction === 'back' ? 520 : 560,
       easing: 'cubic-bezier(.2, .82, .2, 1)',
       fill: 'both',
     }
 
     const outgoingAnimation = previousPage.animate(
       [
-        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-        { opacity: .94, transform: 'translate3d(' + outgoingX + ', 0, 0) scale(.99)' },
+        { opacity: 1, filter: 'blur(0px)' },
+        { opacity: 0, filter: 'blur(9px)' },
       ],
       pageTiming,
     )
     const incomingAnimation = page.animate(
       [
-        { opacity: .985, transform: 'translate3d(' + incomingX + ', 0, 0) scale(.99)' },
-        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+        { opacity: 0, filter: 'blur(9px)' },
+        { opacity: 1, filter: 'blur(0px)' },
       ],
       pageTiming,
     )
     const itemAnimations = transitionItems.map((item, index) =>
       item.animate(
         [
-          { opacity: 0, transform: 'translate3d(0, 10px, 0)' },
-          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+          { opacity: 0, filter: 'blur(9px)' },
+          { opacity: 1, filter: 'blur(0px)' },
         ],
         {
           duration: item.classList.contains('back-link') ? 420 : 500,
@@ -438,14 +450,7 @@ export default function App() {
       ...itemAnimations,
     ]
 
-    await Promise.all(
-      activePageAnimationsRef.current.map(animation =>
-        animation.finished.catch(() => undefined),
-      ),
-    )
-
-    if (transitionId !== transitionIdRef.current) return
-    clearActivePageTransition()
+    await finishPageTransition(transitionId, 1200)
   }
   function handleGlowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.pointerType !== 'mouse') return
