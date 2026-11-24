@@ -2359,3 +2359,59 @@ html {
 .nav-icon-swap--layout-next {
   animation: none !important;
 }
+
+
+/* Hyper-space typography: one word is the interaction target. Its glyphs
+   follow deterministic 3D vectors and stagger without moving the card/page. */
+.slovo {
+  display: inline-block;
+  perspective: 760px;
+  transform-style: preserve-3d;
+  white-space: nowrap;
+}
+
+.slovo > span {
+  display: inline-block;
+  transform: translate3d(0, 0, 0) rotateX(0) rotateY(0) rotateZ(0) scale(1);
+  transform-origin: 50% 50%;
+  opacity: 1;
+  filter: blur(0);
+  backface-visibility: hidden;
+  transition:
+    transform .65s cubic-bezier(.16, 1, .3, 1),
+    opacity .8s ease,
+    filter .8s ease;
+  transition-delay: 0ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .slovo:hover > span {
+    transform:
+      translate3d(var(--x), var(--y), var(--z, 0px))
+      rotateX(var(--rx, 0deg))
+      rotateY(var(--ry, 0deg))
+      rotateZ(var(--rz, 0deg))
+      scale(var(--s, 1));
+    opacity: 0;
+    filter: blur(12px);
+    transition-delay: var(--d, 0ms);
+  }
+}
+
+/* The route layer owns the screen during navigation. Clear any hovered
+   glyph pose before it moves, then restore normal hover behavior afterward. */
+.page-transition.is-route-transitioning .slovo > span {
+  transform: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slovo > span {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}
