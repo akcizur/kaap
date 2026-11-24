@@ -94,6 +94,9 @@ export default function App() {
 
     if (nextPostId === navigationTargetRef.current) return
 
+    // A route transition must never compete with an unfinished card FLIP.
+    if (layoutAnimationsRef.current.length > 0) cancelLayoutAnimations()
+
     transitionLockRef.current = true
     const transitionId = ++transitionIdRef.current
     navigationTargetRef.current = nextPostId
