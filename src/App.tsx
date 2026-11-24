@@ -299,6 +299,7 @@ export default function App() {
             letterSpacing: sourceTypography.letterSpacing,
             color: sourceTypography.color,
             opacity: 1,
+            filter: 'blur(0px)',
           },
           {
             left: targetBounds.left + 'px',
@@ -311,6 +312,7 @@ export default function App() {
             letterSpacing: targetStyle.letterSpacing,
             color: targetStyle.color,
             opacity: 1,
+            filter: 'blur(.35px)',
             offset: .82,
           },
           {
@@ -322,6 +324,7 @@ export default function App() {
             lineHeight: targetStyle.lineHeight,
             letterSpacing: targetStyle.letterSpacing,
             opacity: 0,
+            filter: 'blur(2px)',
           },
         ],
         {
@@ -331,24 +334,19 @@ export default function App() {
         },
       )
 
+      // Whole-page motion stays opacity-only to avoid expensive full-surface blur.
       const outgoingAnimation = previousPage.animate(
-        [
-          { opacity: 1, filter: 'blur(0px)' },
-          { opacity: 0, filter: 'blur(9px)' },
-        ],
+        [{ opacity: 1 }, { opacity: 0 }],
         {
-          duration: 470,
-          easing: 'cubic-bezier(.2, .78, .2, 1)',
+          duration: 360,
+          easing: 'cubic-bezier(.35, 0, .2, 1)',
           fill: 'forwards',
         },
       )
       const incomingAnimation = page.animate(
-        [
-          { opacity: 0, filter: 'blur(9px)' },
-          { opacity: 1, filter: 'blur(0px)' },
-        ],
+        [{ opacity: 0 }, { opacity: 1 }],
         {
-          duration: 390,
+          duration: 420,
           easing: 'cubic-bezier(.2, .82, .2, 1)',
           fill: 'both',
         },
@@ -359,8 +357,8 @@ export default function App() {
           { opacity: 1, filter: 'blur(0px)' },
         ],
         {
-          duration: 190,
-          delay: 390,
+          duration: 220,
+          delay: 300,
           easing: 'cubic-bezier(.16, 1, .3, 1)',
           fill: 'both',
         },
@@ -372,8 +370,8 @@ export default function App() {
             { opacity: 1, filter: 'blur(0px)' },
           ],
           {
-            duration: 390,
-            delay: 65 + Math.min(index, 8) * 24,
+            duration: 420,
+            delay: 45 + Math.min(index, 8) * 28,
             easing: 'cubic-bezier(.2, .78, .2, 1)',
             fill: 'both',
           },
@@ -412,23 +410,18 @@ export default function App() {
     })
 
     const pageTiming: KeyframeAnimationOptions = {
-      duration: direction === 'back' ? 520 : 560,
+      duration: direction === 'back' ? 440 : 480,
       easing: 'cubic-bezier(.2, .82, .2, 1)',
       fill: 'both',
     }
 
+    // The page itself fades only; blur is limited to the smaller items below.
     const outgoingAnimation = previousPage.animate(
-      [
-        { opacity: 1, filter: 'blur(0px)' },
-        { opacity: 0, filter: 'blur(9px)' },
-      ],
+      [{ opacity: 1 }, { opacity: 0 }],
       pageTiming,
     )
     const incomingAnimation = page.animate(
-      [
-        { opacity: 0, filter: 'blur(9px)' },
-        { opacity: 1, filter: 'blur(0px)' },
-      ],
+      [{ opacity: 0 }, { opacity: 1 }],
       pageTiming,
     )
     const itemAnimations = transitionItems.map((item, index) =>
@@ -438,8 +431,8 @@ export default function App() {
           { opacity: 1, filter: 'blur(0px)' },
         ],
         {
-          duration: item.classList.contains('back-link') ? 420 : 500,
-          delay: item.classList.contains('back-link') ? 55 : 70 + Math.min(index, 8) * 34,
+          duration: item.classList.contains('back-link') ? 360 : 420,
+          delay: item.classList.contains('back-link') ? 35 : 45 + Math.min(index, 8) * 26,
           easing: 'cubic-bezier(.2, .78, .2, 1)',
           fill: 'both',
         },
