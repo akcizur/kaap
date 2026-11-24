@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react'
 import {
   Globe2,
   Mail,
@@ -18,6 +18,11 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const searchButtonRef = useRef<HTMLButtonElement>(null)
+  const layoutSnapshotRef = useRef<Map<string, DOMRect> | null>(null)
+  const sharedElementRef = useRef<HTMLElement | null>(null)
+  const sharedTargetRef = useRef<HTMLElement | null>(null)
+  const sharedTargetStyleRef = useRef<{ opacity: string; visibility: string } | null>(null)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(() => {
     const value = new URLSearchParams(window.location.search).get('post')
     const id = value ? Number(value) : NaN
@@ -50,6 +55,16 @@ export default function App() {
     activePageAnimationsRef.current.forEach(animation => animation.cancel())
     activePageAnimationsRef.current = []
     restoreTransitionItemStyles()
+
+    if (sharedTargetRef.current && sharedTargetStyleRef.current) {
+      sharedTargetRef.current.style.opacity = sharedTargetStyleRef.current.opacity
+      sharedTargetRef.current.style.visibility = sharedTargetStyleRef.current.visibility
+    }
+    sharedTargetRef.current = null
+    sharedTargetStyleRef.current = null
+    sharedElementRef.current?.remove()
+    sharedElementRef.current = null
+
     previousPageLayerRef.current?.replaceChildren()
 
     if (pageRef.current) {
@@ -69,14 +84,21 @@ export default function App() {
   async function transitionToPost(
     nextPostId: number | null,
     direction: 'forward' | 'back',
+    restoreScrollY = 0,
+    sourceElement: HTMLElement | null = null,
   ) {
     if (nextPostId === navigationTargetRef.current) return
 
-    navigationTargetRef.current = nextPostId
+    const currentPostId = selectedPostIdRef.current
+    const sharedSource = sourceElement ?? (
+      direction === 'back' && currentPostId !== null
+        ? pageRef.current?.querySelector<HTMLElement>('.post-detail') ?? null
+        : null
+    )
+    const sourceBounds = sharedSource?.getBoundingClientRect()
     const transitionId = ++transitionIdRef.current
 
-    // Cancel any in-flight transition and restore the currently rendered page
-    // before taking its snapshot. This keeps rapid navigation deterministic.
+    navigationTargetRef.current = nextPostId
     clearActivePageTransition()
 
     const page = pageRef.current
@@ -91,14 +113,10 @@ export default function App() {
     ) {
       selectedPostIdRef.current = nextPostId
       setSelectedPostId(nextPostId)
-      window.scrollTo(0, 0)
+      window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
       return
     }
 
-    // Capture the outgoing page, then render the destination underneath it.
-    // Both layers can now move on the same frame instead of waiting for OUT
-    // to finish before IN starts (the previous implementation introduced a
-    // visible pause here).
     page.style.pointerEvents = 'none'
 
     const previousPage = page.cloneNode(true) as HTMLDivElement
@@ -110,20 +128,180 @@ export default function App() {
     })
     previousPageLayer.replaceChildren(previousPage)
 
-    // Hide only the live layer. The snapshot above must retain its visible
-    // computed state or the outgoing page will disappear instead of moving.
-    page.style.visibility = 'hidden'
+    // A fixed clone keeps the clicked card attached to the viewport while
+    // the destination page and its scroll position are being prepared.
+    let sharedElement: HTMLElement | null = null
+    if (sharedSource && sourceBounds) {
+      sharedElement = sharedSource.cloneNode(true) as HTMLElement
+      sharedElement.classList.add('shared-element-transition')
+      sharedElement.querySelectorAll('[id]').forEach(element => {
+        element.removeAttribute('id')
+      })
+      Object.assign(sharedElement.style, {
+        position: 'fixed',
+        left: sourceBounds.left + 'px',
+        top: sourceBounds.top + 'px',
+        width: sourceBounds.width + 'px',
+        height: sourceBounds.height + 'px',
+        margin: '0',
+        zIndex: '1000',
+        boxSizing: 'border-box',
+        pointerEvents: 'none',
+        opacity: '1',
+      })
+      document.body.appendChild(sharedElement)
+      sharedElementRef.current = sharedElement
+    }
 
+    page.style.visibility = 'hidden'
     selectedPostIdRef.current = nextPostId
     setSelectedPostId(nextPostId)
-    window.scrollTo(0, 0)
+    window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
 
     await waitForPaint()
     if (transitionId !== transitionIdRef.current) return
 
-    // Start each component from a clean, invisible baseline. The page itself
-    // still enters as a single continuous surface, while content reveals in
-    // a restrained sequence over the shared page movement.
+    page.style.visibility = ''
+
+    const targetSelector = nextPostId !== null
+      ? '.post-detail'
+      : currentPostId !== null
+        ? '[data-post-id="' + currentPostId + '"] .post'
+        : null
+    const sharedTarget = targetSelector
+      ? page.querySelector<HTMLElement>(targetSelector)
+      : null
+
+    if (sharedElement && sharedTarget && sourceBounds) {
+      const targetBounds = sharedTarget.getBoundingClientRect()
+      const sourceRadius = getComputedStyle(sharedElement).borderRadius
+      const targetRadius = getComputedStyle(sharedTarget).borderRadius
+
+      sharedTargetStyleRef.current = {
+        opacity: sharedTarget.style.opacity,
+        visibility: sharedTarget.style.visibility,
+      }
+      sharedTargetRef.current = sharedTarget
+      sharedTarget.style.visibility = 'visible'
+      sharedTarget.style.opacity = '0'
+
+      const transitionItems = Array.from(
+        page.querySelectorAll<HTMLElement>('[data-transition-item]'),
+      )
+      transitionItemStylesRef.current = transitionItems.map(element => ({
+        element,
+        opacity: element.style.opacity,
+        transform: element.style.transform,
+      }))
+      transitionItems.forEach(element => {
+        element.style.opacity = '0'
+        element.style.transform = 'translate3d(0, 9px, 0)'
+      })
+
+      const sharedAnimation = sharedElement.animate(
+        [
+          {
+            left: sourceBounds.left + 'px',
+            top: sourceBounds.top + 'px',
+            width: sourceBounds.width + 'px',
+            height: sourceBounds.height + 'px',
+            borderRadius: sourceRadius,
+            opacity: 1,
+          },
+          {
+            left: targetBounds.left + 'px',
+            top: targetBounds.top + 'px',
+            width: targetBounds.width + 'px',
+            height: targetBounds.height + 'px',
+            borderRadius: targetRadius,
+            opacity: .98,
+            offset: .82,
+          },
+          {
+            left: targetBounds.left + 'px',
+            top: targetBounds.top + 'px',
+            width: targetBounds.width + 'px',
+            height: targetBounds.height + 'px',
+            borderRadius: targetRadius,
+            opacity: 0,
+          },
+        ],
+        {
+          duration: 560,
+          easing: 'cubic-bezier(.2, .82, .2, 1)',
+          fill: 'forwards',
+        },
+      )
+
+      const outgoingAnimation = previousPage.animate(
+        [{ opacity: 1 }, { opacity: .12 }],
+        {
+          duration: 470,
+          easing: 'cubic-bezier(.2, .78, .2, 1)',
+          fill: 'forwards',
+        },
+      )
+      const incomingAnimation = page.animate(
+        [
+          { opacity: .92, transform: 'translate3d(0, 8px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        {
+          duration: 390,
+          easing: 'cubic-bezier(.2, .82, .2, 1)',
+          fill: 'both',
+        },
+      )
+      const revealAnimation = sharedTarget.animate(
+        [
+          { opacity: 0, transform: 'translate3d(0, 7px, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        {
+          duration: 210,
+          delay: 390,
+          easing: 'cubic-bezier(.16, 1, .3, 1)',
+          fill: 'both',
+        },
+      )
+      const itemAnimations = transitionItems.map((item, index) =>
+        item.animate(
+          [
+            { opacity: 0, transform: 'translate3d(0, 9px, 0)' },
+            { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+          ],
+          {
+            duration: 390,
+            delay: 65 + Math.min(index, 8) * 24,
+            easing: 'cubic-bezier(.2, .78, .2, 1)',
+            fill: 'both',
+          },
+        ),
+      )
+
+      activePageAnimationsRef.current = [
+        sharedAnimation,
+        outgoingAnimation,
+        incomingAnimation,
+        revealAnimation,
+        ...itemAnimations,
+      ]
+
+      await Promise.all(
+        activePageAnimationsRef.current.map(animation =>
+          animation.finished.catch(() => undefined),
+        ),
+      )
+
+      if (transitionId !== transitionIdRef.current) return
+      clearActivePageTransition()
+      return
+    }
+
+    // Direct-entry navigation keeps the layered slide as a dependable fallback.
+    sharedElement?.remove()
+    sharedElementRef.current = null
+
     const transitionItems = Array.from(
       page.querySelectorAll<HTMLElement>('[data-transition-item]'),
     )
@@ -142,51 +320,40 @@ export default function App() {
       : 'calc(-100% + 32px)'
     const incomingX = direction === 'back' ? '-100%' : '100%'
 
-    // Reveal the incoming page only after its first-frame styles are ready.
-    page.style.visibility = ''
-
     const pageTiming: KeyframeAnimationOptions = {
       duration: direction === 'back' ? 700 : 760,
       easing: 'cubic-bezier(.2, .82, .2, 1)',
       fill: 'both',
     }
 
-    // OUT + IN run concurrently with identical timing/easing. The outgoing
-    // page stays above the incoming one, naturally exposing the new page as
-    // it glides in and leaving a narrow 32px edge until the reveal settles.
     const outgoingAnimation = previousPage.animate(
       [
         { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-        { opacity: .94, transform: `translate3d(${outgoingX}, 0, 0) scale(.99)` },
+        { opacity: .94, transform: 'translate3d(' + outgoingX + ', 0, 0) scale(.99)' },
       ],
       pageTiming,
     )
     const incomingAnimation = page.animate(
       [
-        { opacity: .985, transform: `translate3d(${incomingX}, 0, 0) scale(.99)` },
+        { opacity: .985, transform: 'translate3d(' + incomingX + ', 0, 0) scale(.99)' },
         { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
       ],
       pageTiming,
     )
-
-    // Cap the stagger so very long lists do not leave the last cards waiting
-    // several seconds. The first items remain clearly sequenced.
-    const itemAnimations = transitionItems.map((item, index) => {
-      const isBackControl = item.classList.contains('back-link')
-
-      return item.animate(
+    const itemAnimations = transitionItems.map((item, index) =>
+      item.animate(
         [
           { opacity: 0, transform: 'translate3d(0, 10px, 0)' },
           { opacity: 1, transform: 'translate3d(0, 0, 0)' },
         ],
         {
-          duration: isBackControl ? 420 : 500,
-          delay: isBackControl ? 55 : 70 + Math.min(index, 8) * 34,
+          duration: item.classList.contains('back-link') ? 420 : 500,
+          delay: item.classList.contains('back-link') ? 55 : 70 + Math.min(index, 8) * 34,
           easing: 'cubic-bezier(.2, .78, .2, 1)',
           fill: 'both',
         },
-      )
-    })
+      ),
+    )
 
     activePageAnimationsRef.current = [
       outgoingAnimation,
@@ -194,8 +361,6 @@ export default function App() {
       ...itemAnimations,
     ]
 
-    // A canceled animation rejects its finished promise. Convert that into a
-    // settled result; the transition id below decides which navigation wins.
     await Promise.all(
       activePageAnimationsRef.current.map(animation =>
         animation.finished.catch(() => undefined),
@@ -203,30 +368,8 @@ export default function App() {
     )
 
     if (transitionId !== transitionIdRef.current) return
-
-    // Keep the previous page's narrow edge visible until the new components
-    // have arrived, then remove it with a short, quiet fade.
-    const edgeFadeAnimation = previousPage.animate(
-      [{ opacity: .94 }, { opacity: 0 }],
-      {
-        duration: 180,
-        easing: 'cubic-bezier(.2, .7, .2, 1)',
-        fill: 'forwards',
-      },
-    )
-    activePageAnimationsRef.current = [edgeFadeAnimation]
-
-    try {
-      await edgeFadeAnimation.finished
-    } catch {
-      // A newer navigation can replace the transition.
-    }
-
-    if (transitionId !== transitionIdRef.current) return
-
     clearActivePageTransition()
   }
-
   function handleGlowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.pointerType !== 'mouse') return
 
@@ -293,20 +436,35 @@ export default function App() {
           '',
           destination.pathname + destination.search + destination.hash,
         )
-        void transitionToPost(null, 'back')
+        void transitionToPost(null, 'back', 0, pageRef.current?.querySelector<HTMLElement>('.post-detail') ?? null)
       }
       return
     }
 
     event.preventDefault()
+    const currentState = window.history.state ?? {}
+    window.history.replaceState(
+      {
+        ...currentState,
+        __kaapHistoryIndex: historyIndexRef.current,
+        __kaapScrollY: window.scrollY,
+      },
+      '',
+      window.location.href,
+    )
+
     const nextHistoryIndex = historyIndexRef.current + 1
     window.history.pushState(
-      { ...window.history.state, __kaapHistoryIndex: nextHistoryIndex },
+      { ...currentState, __kaapHistoryIndex: nextHistoryIndex, __kaapScrollY: 0 },
       '',
       destination.pathname + destination.search + destination.hash,
     )
     historyIndexRef.current = nextHistoryIndex
-    void transitionToPost(nextPostId, 'forward')
+
+    const sharedSource = link.classList.contains('post-link')
+      ? link.querySelector<HTMLElement>('.post')
+      : null
+    void transitionToPost(nextPostId, 'forward', 0, sharedSource)
   }
 
   const { theme, viewMode } = preferences
@@ -327,6 +485,60 @@ export default function App() {
     )
   }, [searchQuery])
 
+  useLayoutEffect(() => {
+    const snapshots = layoutSnapshotRef.current
+    if (!snapshots) return
+    layoutSnapshotRef.current = null
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const links = Array.from(
+      pageRef.current?.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]') ?? [],
+    )
+
+    links.forEach(link => {
+      const id = link.dataset.postId
+      const previous = id ? snapshots.get(id) : undefined
+      if (!previous) return
+
+      const next = link.getBoundingClientRect()
+      const deltaX = previous.left - next.left
+      const deltaY = previous.top - next.top
+      const scaleX = Math.max(.55, Math.min(1.8, previous.width / Math.max(1, next.width)))
+      const scaleY = Math.max(.55, Math.min(1.8, previous.height / Math.max(1, next.height)))
+
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1 && Math.abs(scaleX - 1) < .02 && Math.abs(scaleY - 1) < .02) return
+
+      link.style.willChange = 'transform'
+      const animation = link.animate(
+        [
+          {
+            transform: 'translate3d(' + deltaX + 'px, ' + deltaY + 'px, 0) scale(' + scaleX + ', ' + scaleY + ')',
+            transformOrigin: 'top left',
+          },
+          {
+            transform: 'translate3d(0, 0, 0) scale(1, 1)',
+            transformOrigin: 'top left',
+          },
+        ],
+        {
+          duration: 480,
+          easing: 'cubic-bezier(.2, .82, .2, 1)',
+          fill: 'both',
+        },
+      )
+
+      animation.finished
+        .then(() => {
+          animation.cancel()
+          link.style.willChange = ''
+        })
+        .catch(() => {
+          link.style.willChange = ''
+        })
+    })
+  }, [viewMode])
+
   useEffect(() => {
     // Store a monotonic index in each app-managed history entry so Back and
     // Forward can animate in opposite directions.
@@ -337,7 +549,7 @@ export default function App() {
 
     historyIndexRef.current = currentIndex
     window.history.replaceState(
-      { ...currentState, __kaapHistoryIndex: currentIndex },
+      { ...currentState, __kaapHistoryIndex: currentIndex, __kaapScrollY: window.scrollY },
       '',
       window.location.href,
     )
@@ -352,7 +564,10 @@ export default function App() {
       historyIndexRef.current = nextIndex
       const value = new URLSearchParams(window.location.search).get('post')
       const id = value ? Number(value) : NaN
-      void transitionToPost(Number.isInteger(id) && id > 0 ? id : null, direction)
+      const restoreScrollY = Number.isFinite(event.state?.__kaapScrollY)
+        ? Math.max(0, Number(event.state.__kaapScrollY))
+        : 0
+      void transitionToPost(Number.isInteger(id) && id > 0 ? id : null, direction, restoreScrollY)
     }
 
     window.addEventListener('popstate', syncPost)
@@ -360,11 +575,15 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (!searchOpen) return
-
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setSearchOpen(false)
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setSearchOpen(true)
+        return
+      }
+
+      if (event.key === 'Escape' && searchOpen) {
+        closeSearch()
       }
     }
 
@@ -376,14 +595,31 @@ export default function App() {
     if (searchOpen) searchInputRef.current?.focus()
   }, [searchOpen])
 
+  function closeSearch() {
+    setSearchOpen(false)
+    setSearchQuery('')
+    window.requestAnimationFrame(() => searchButtonRef.current?.focus())
+  }
+
   function handleSearchToggle() {
-    setSearchOpen(open => {
-      if (open) setSearchQuery('')
-      return !open
-    })
+    if (searchOpen) {
+      closeSearch()
+      return
+    }
+    setSearchOpen(true)
   }
 
   function handleLayoutToggle() {
+    const snapshots = new Map<string, DOMRect>()
+    const links = Array.from(
+      pageRef.current?.querySelectorAll<HTMLElement>('.posts .post-link[data-post-id]') ?? [],
+    )
+    links.forEach(link => {
+      const id = link.dataset.postId
+      if (id) snapshots.set(id, link.getBoundingClientRect())
+    })
+    layoutSnapshotRef.current = snapshots
+
     const index = VIEW_MODE_ORDER.indexOf(viewMode)
     const nextMode = VIEW_MODE_ORDER[(index + 1) % VIEW_MODE_ORDER.length]
     updatePreference('viewMode', nextMode)
@@ -403,76 +639,91 @@ export default function App() {
             <button
               type="button"
               className="nav-button"
+              data-glow="true"
               onClick={handleLayoutToggle}
               title={`Layout: ${VIEW_MODES[viewMode].label}`}
               aria-label={`Change layout. Current: ${VIEW_MODES[viewMode].label}`}
             >
-              {(() => {
-                const ViewIcon = VIEW_MODES[viewMode].icon
-                return <ViewIcon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              })()}
+              <span key={viewMode} className="nav-icon-swap" aria-hidden="true">
+                {(() => {
+                  const ViewIcon = VIEW_MODES[viewMode].icon
+                  return <ViewIcon className="ui-icon" size={15} strokeWidth={2} />
+                })()}
+              </span>
             </button>
 
             <button
               type="button"
               className="nav-button"
+              data-glow="true"
               onClick={handleThemeToggle}
               title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
               aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
             >
-              {theme === 'light' ? (
-                <Sun className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              ) : (
-                <Moon className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              )}
+              <span key={theme} className="nav-icon-swap" aria-hidden="true">
+                {theme === 'light' ? (
+                  <Sun className="ui-icon" size={15} strokeWidth={2} />
+                ) : (
+                  <Moon className="ui-icon" size={15} strokeWidth={2} />
+                )}
+              </span>
             </button>
 
             <button
+              ref={searchButtonRef}
               type="button"
               className={`nav-button search-toggle${searchOpen ? ' is-active' : ''}`}
+              data-glow="true"
               onClick={handleSearchToggle}
               title={searchOpen ? 'Close search' : 'Search'}
               aria-label={searchOpen ? 'Close search' : 'Search'}
               aria-expanded={searchOpen}
               aria-controls="navbar-search"
             >
-              {searchOpen ? (
-                <X className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              ) : (
-                <Search className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-              )}
+              <span key={searchOpen ? 'close' : 'search'} className="nav-icon-swap" aria-hidden="true">
+                {searchOpen ? (
+                  <X className="ui-icon" size={15} strokeWidth={2} />
+                ) : (
+                  <Search className="ui-icon" size={15} strokeWidth={2} />
+                )}
+              </span>
             </button>
           </nav>
         </div>
 
-        {searchOpen && (
-          <div id="navbar-search" className="nav-panel nav-panel--search">
-            <div className="nav-panel-inner">
-              <div className="nav-search">
-                <Search className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
-                <input
-                  ref={searchInputRef}
-                  className="nav-search-input"
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event: ChangeEvent<HTMLInputElement>) => setSearchQuery(event.target.value)}
-                  placeholder="Search posts by title, category, or date..."
-                  aria-label="Search posts"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    className="nav-search-clear" data-glow="true"
-                    onClick={() => setSearchQuery('')}
-                    aria-label="Clear search"
-                  >
-                    <X className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
-                  </button>
-                )}
-              </div>
+        <div
+          id="navbar-search"
+          className={'nav-panel nav-panel--search' + (searchOpen ? ' is-open' : '')}
+          aria-hidden={!searchOpen}
+        >
+          <div className="nav-panel-inner">
+            <div className="nav-search">
+              <Search className="ui-icon" size={15} strokeWidth={2} aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                className="nav-search-input"
+                type="search"
+                value={searchQuery}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setSearchQuery(event.target.value)}
+                placeholder="Search posts by title, category, or date..."
+                aria-label="Search posts"
+                tabIndex={searchOpen ? 0 : -1}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="nav-search-clear"
+                  data-glow="true"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  tabIndex={searchOpen ? 0 : -1}
+                >
+                  <X className="ui-icon" size={14} strokeWidth={2} aria-hidden="true" />
+                </button>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </header>
 
       <div className="page-stage">
