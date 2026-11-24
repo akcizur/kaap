@@ -2341,3 +2341,21 @@ html {
   overflow-anchor: none;
 }
 
+
+
+/* A route transition is a single motion layer. Nested hover/utility
+   transitions are paused until that layer has fully settled. */
+.page-transition.is-route-transitioning,
+.site-header.is-route-transitioning {
+  pointer-events: none !important;
+}
+
+.page-transition.is-route-transitioning *,
+.site-header.is-route-transitioning * {
+  transition: none !important;
+  animation: none !important;
+}
+
+.nav-icon-swap--layout-next {
+  animation: none !important;
+}
