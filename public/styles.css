@@ -2002,3 +2002,172 @@ a:focus-visible {
 .site-chip {
   border-radius: 999px;
 }
+
+
+/* -------------------------------------------------------------------------- */
+/* Quiet Motion — shared timing, circles/pills, morphing and FLIP              */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --ease-standard: cubic-bezier(.2, .7, .2, 1);
+  --ease-enter: cubic-bezier(.16, 1, .3, 1);
+  --ease-fluid: cubic-bezier(.2, .82, .2, 1);
+}
+
+button {
+  border-radius: 999px;
+}
+
+.nav-button,
+.nav-search-clear,
+.subscribe-button,
+.footer-icon-link {
+  aspect-ratio: 1;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+
+.nav-search-clear {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  min-height: 24px;
+}
+
+.subscribe-button {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+}
+
+.footer-icon-link {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
+.back-link,
+.nav-search,
+.email-input,
+.site-chip {
+  border-radius: 999px !important;
+}
+
+/* A search sheet that stays in the tree long enough to animate in both ways. */
+.nav-panel {
+  overflow: hidden;
+  max-height: 0;
+  visibility: hidden;
+  opacity: 0;
+  transform: translate3d(0, -7px, 0) scale(.985);
+  transform-origin: top center;
+  border-radius: 0 !important;
+  pointer-events: none;
+  animation: none !important;
+  transition:
+    max-height .3s var(--ease-enter),
+    opacity .2s ease,
+    transform .3s var(--ease-enter),
+    visibility 0s linear .3s;
+}
+
+.nav-panel.is-open {
+  max-height: 112px;
+  visibility: visible;
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.nav-search {
+  min-height: 42px;
+  border-radius: 999px !important;
+}
+
+.nav-icon-swap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: nav-icon-arrive .26s var(--ease-enter) both;
+}
+
+.nav-button:active .nav-icon-swap {
+  transform: scale(.86);
+}
+
+@keyframes nav-icon-arrive {
+  from {
+    opacity: 0;
+    transform: scale(.72) rotate(-10deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* The shared card is a temporary viewport layer, not a second content card. */
+.shared-element-transition {
+  position: fixed !important;
+  z-index: 1000 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  pointer-events: none !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  will-change: left, top, width, height, border-radius, opacity;
+}
+
+.shared-element-transition *,
+.shared-element-transition::before,
+.shared-element-transition::after {
+  pointer-events: none !important;
+}
+
+.app {
+  transition:
+    background-color .42s ease,
+    color .35s ease;
+}
+
+@media (max-width: 640px) {
+  .nav-button {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-icon-swap {
+    animation: none !important;
+  }
+
+  .nav-panel,
+  .nav-panel.is-open {
+    transition: none !important;
+    transform: none;
+  }
+
+  .shared-element-transition {
+    display: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
