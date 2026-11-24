@@ -106,6 +106,8 @@ export default function App() {
   ) {
     if (nextPostId === navigationTargetRef.current) return
 
+    let transitionId = transitionIdRef.current
+    try {
     const currentPostId = selectedPostIdRef.current
     const sharedSource = sourceElement ?? (
       direction === 'back' && currentPostId !== null
@@ -133,7 +135,7 @@ export default function App() {
       textShadow: sourceStyle.textShadow,
       webkitTextStroke: sourceStyle.getPropertyValue('-webkit-text-stroke'),
     } : null
-    const transitionId = ++transitionIdRef.current
+    transitionId = ++transitionIdRef.current
 
     navigationTargetRef.current = nextPostId
     clearActivePageTransition()
@@ -451,7 +453,19 @@ export default function App() {
     ]
 
     await finishPageTransition(transitionId, 1200)
+    } catch {
+      // Never leave the application hidden or non-interactive if WAAPI rejects
+      // a keyframe or a browser interrupts the transition unexpectedly.
+      if (transitionId === transitionIdRef.current) {
+        clearActivePageTransition()
+        selectedPostIdRef.current = nextPostId
+        navigationTargetRef.current = nextPostId
+        setSelectedPostId(nextPostId)
+        window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
+      }
+    }
   }
+
   function handleGlowPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.pointerType !== 'mouse') return
 
