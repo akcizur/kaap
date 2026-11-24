@@ -1,6 +1,5 @@
 import type { Post } from '../data/posts'
 import type { ViewMode } from '../config/viewModes'
-import { WarpText } from './WarpText'
 
 type PostCardProps = {
   post: Post
@@ -15,7 +14,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
       <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article className={articleClassName} tabIndex={0}>
         <div className="compact-copy">
           <span className="post-category">{post.category}</span>
-          <span className="compact-title" aria-label={post.title}><WarpText text={post.title} /></span>
+          <span className="compact-title">{post.title}</span>
         </div>
         <span className="compact-date post-date-text">{post.date}</span>
       </article></a>
@@ -29,7 +28,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
         tabIndex={0}
       >
         <div className="post-kicker">{post.category} · <span className="post-kicker-date">{post.date}</span></div>
-        <h4 className="soft-emboss soft-emboss--glass" aria-label={post.title}><WarpText text={post.title} /></h4>
+        <h4 className="soft-emboss soft-emboss--glass">{post.title}</h4>
         {index === 0 && <p>{post.excerpt}</p>}
       </article></a>
     )
@@ -39,7 +38,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
     return (
       <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article className={articleClassName} tabIndex={0}>
         <div className="post-kicker">{post.category}</div>
-        <h4 className="soft-emboss soft-emboss--glass" aria-label={post.title}><WarpText text={post.title} /></h4>
+        <h4 className="soft-emboss soft-emboss--glass">{post.title}</h4>
         <p>{post.excerpt}</p>
         <div className="post-date post-date-text">{post.date}</div>
       </article></a>
@@ -48,7 +47,7 @@ export function PostCard({ post, mode, index, articleClassName }: PostCardProps)
 
   return (
     <a className="post-link" href={`?post=${post.id}`} aria-label={`Read ${post.title}`} data-transition-item="post-card" data-post-id={post.id}><article className={articleClassName} tabIndex={0}>
-      <h4 className="soft-emboss soft-emboss--glass" aria-label={post.title}><WarpText text={post.title} /></h4>
+      <h4 className="soft-emboss soft-emboss--glass">{post.title}</h4>
       <p>{post.excerpt}</p>
       <div className="post-meta">
         <span>{post.category}</span>
