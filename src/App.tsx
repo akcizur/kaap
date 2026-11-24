@@ -641,7 +641,7 @@ export default function App() {
 
   return (
     <div className="app" onClick={handleAppClick} onPointerMove={handleGlowPointerMove}>
-      <header className="site-header">
+      <header className={'site-header' + (searchOpen ? ' has-search-open' : '')}>
         <div className="header-inner">
           <span className="brand soft-emboss soft-emboss--header">Dimple</span>
 
