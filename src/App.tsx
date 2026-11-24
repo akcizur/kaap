@@ -38,6 +38,7 @@ export default function App() {
   })
 
   const pageRef = useRef<HTMLDivElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
   const selectedPostIdRef = useRef(selectedPostId)
   const navigationTargetRef = useRef(selectedPostId)
   const historyIndexRef = useRef(0)
@@ -49,6 +50,9 @@ export default function App() {
   function clearActivePageTransition() {
     activePageAnimationsRef.current.forEach(animation => animation.cancel())
     activePageAnimationsRef.current = []
+
+    pageRef.current?.classList.remove('is-route-transitioning')
+    headerRef.current?.classList.remove('is-route-transitioning')
 
     if (pageRef.current) {
       pageRef.current.style.visibility = ''
@@ -92,6 +96,11 @@ export default function App() {
         return
       }
 
+      // The route wrapper is the only animated surface. Disable every
+      // nested/header transition so hover, search and theme motion cannot
+      // compete with the directional page movement.
+      page.classList.add('is-route-transitioning')
+      headerRef.current?.classList.add('is-route-transitioning')
       page.style.pointerEvents = 'none'
       page.style.willChange = 'transform'
 
@@ -369,6 +378,8 @@ export default function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (transitionLockRef.current) return
+
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setSearchOpen(true)
@@ -395,6 +406,7 @@ export default function App() {
   }
 
   function handleSearchToggle() {
+    if (transitionLockRef.current) return
     if (searchOpen) {
       closeSearch()
       return
@@ -435,12 +447,13 @@ export default function App() {
     updatePreference('viewMode', nextMode)
   }
   function handleThemeToggle() {
+    if (transitionLockRef.current) return
     updatePreference('theme', theme === 'light' ? 'dark' : 'light')
   }
 
   return (
     <div className="app" onClick={handleAppClick} onPointerMove={handleGlowPointerMove}>
-      <header className={'site-header' + (searchOpen ? ' has-search-open' : '')}>
+      <header ref={headerRef} className={'site-header' + (searchOpen ? ' has-search-open' : '')}>
         <div className="header-inner">
           <span className="brand soft-emboss soft-emboss--header">Dimple</span>
 
