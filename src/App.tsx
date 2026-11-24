@@ -197,6 +197,9 @@ export default function App() {
         const queued = queuedNavigationRef.current
         queuedNavigationRef.current = null
         if (queued && queued.postId !== selectedPostIdRef.current) {
+          // The queue stores the newest target; reset the guard to the page
+          // that is now rendered so the queued transition can actually start.
+          navigationTargetRef.current = selectedPostIdRef.current
           void transitionToPost(queued.postId, queued.direction, queued.restoreScrollY)
         } else {
           navigationTargetRef.current = selectedPostIdRef.current
