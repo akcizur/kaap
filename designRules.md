@@ -772,3 +772,8 @@ Icon changes use a short keyed crossfade / scale transition. Search remains moun
 
 ### Motion accessibility
 Respect `prefers-reduced-motion`. In that mode use immediate theme/layout changes and direct navigation without spatial morphing. All controls remain keyboard operable.
+
+
+## 38. Search panel layout
+
+The open search panel is part of the sticky header's normal document flow. It expands the header and pushes page content down instead of covering the hero or the first article. The search field remains a pill; keyboard focus is indicated on the pill container, never by a rectangular browser outline on the inner input.
