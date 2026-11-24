@@ -23,6 +23,8 @@ export default function App() {
   const sharedElementRef = useRef<HTMLElement | null>(null)
   const sharedTargetRef = useRef<HTMLElement | null>(null)
   const sharedTargetStyleRef = useRef<{ opacity: string; visibility: string } | null>(null)
+  const sharedSourceRef = useRef<HTMLElement | null>(null)
+  const sharedSourceVisibilityRef = useRef<string | null>(null)
   const [selectedPostId, setSelectedPostId] = useState<number | null>(() => {
     const value = new URLSearchParams(window.location.search).get('post')
     const id = value ? Number(value) : NaN
@@ -30,7 +32,6 @@ export default function App() {
   })
 
   const pageRef = useRef<HTMLDivElement>(null)
-  const previousPageLayerRef = useRef<HTMLDivElement>(null)
   const selectedPostIdRef = useRef(selectedPostId)
   const navigationTargetRef = useRef(selectedPostId)
   const historyIndexRef = useRef(0)
@@ -58,6 +59,12 @@ export default function App() {
     activePageAnimationsRef.current = []
     restoreTransitionItemStyles()
 
+    if (sharedSourceRef.current && sharedSourceVisibilityRef.current !== null) {
+      sharedSourceRef.current.style.visibility = sharedSourceVisibilityRef.current
+    }
+    sharedSourceRef.current = null
+    sharedSourceVisibilityRef.current = null
+
     if (sharedTargetRef.current && sharedTargetStyleRef.current) {
       sharedTargetRef.current.style.opacity = sharedTargetStyleRef.current.opacity
       sharedTargetRef.current.style.visibility = sharedTargetStyleRef.current.visibility
@@ -67,11 +74,12 @@ export default function App() {
     sharedElementRef.current?.remove()
     sharedElementRef.current = null
 
-    previousPageLayerRef.current?.replaceChildren()
-
     if (pageRef.current) {
       pageRef.current.style.visibility = ''
       pageRef.current.style.pointerEvents = ''
+      pageRef.current.style.opacity = ''
+      pageRef.current.style.transform = ''
+      pageRef.current.style.willChange = ''
     }
   }
 
@@ -106,346 +114,321 @@ export default function App() {
   ) {
     if (nextPostId === navigationTargetRef.current) return
 
-    let transitionId = transitionIdRef.current
-    try {
-    const currentPostId = selectedPostIdRef.current
-    const sharedSource = sourceElement ?? (
-      direction === 'back' && currentPostId !== null
-        ? pageRef.current?.querySelector<HTMLElement>('.post-detail') ?? null
-        : null
-    )
-    const sharedSourceTitle = sharedSource
-      ? sharedSource.matches('.post-detail')
-        ? sharedSource.querySelector<HTMLElement>('.post-detail-title')
-        : sharedSource.querySelector<HTMLElement>('h4, .compact-title')
-      : null
-    const sourceBounds = sharedSourceTitle?.getBoundingClientRect()
-    const sourceTitleText = sharedSourceTitle?.textContent?.trim() ?? ''
-    const sourceStyle = sharedSourceTitle ? window.getComputedStyle(sharedSourceTitle) : null
-    const sourceTypography = sourceStyle ? {
-      fontFamily: sourceStyle.fontFamily,
-      fontSize: sourceStyle.fontSize,
-      fontWeight: sourceStyle.fontWeight,
-      fontStyle: sourceStyle.fontStyle,
-      lineHeight: sourceStyle.lineHeight,
-      letterSpacing: sourceStyle.letterSpacing,
-      color: sourceStyle.color,
-      textAlign: sourceStyle.textAlign,
-      textTransform: sourceStyle.textTransform,
-      textShadow: sourceStyle.textShadow,
-      webkitTextStroke: sourceStyle.getPropertyValue('-webkit-text-stroke'),
-    } : null
-    transitionId = ++transitionIdRef.current
-
-    navigationTargetRef.current = nextPostId
+    const transitionId = ++transitionIdRef.current
     clearActivePageTransition()
 
-    const page = pageRef.current
-    const previousPageLayer = previousPageLayerRef.current
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    try {
+      const currentPostId = selectedPostIdRef.current
+      const sharedSource = sourceElement ?? (
+        direction === 'back' && currentPostId !== null
+          ? pageRef.current?.querySelector<HTMLElement>('.post-detail') ?? null
+          : null
+      )
+      const sharedSourceTitle = sharedSource
+        ? sharedSource.matches('.post-detail')
+          ? sharedSource.querySelector<HTMLElement>('.post-detail-title')
+          : sharedSource.querySelector<HTMLElement>('h4, .compact-title')
+        : null
+      const sourceBounds = sharedSourceTitle?.getBoundingClientRect()
+      const sourceIsVisible = Boolean(
+        sourceBounds &&
+        sourceBounds.width > 0 &&
+        sourceBounds.height > 0 &&
+        sourceBounds.bottom > 0 &&
+        sourceBounds.top < window.innerHeight
+      )
+      const sourceTitleText = sourceIsVisible ? sharedSourceTitle?.textContent?.trim() ?? '' : ''
+      const sourceStyle = sourceIsVisible && sharedSourceTitle
+        ? window.getComputedStyle(sharedSourceTitle)
+        : null
+      const sourceTypography = sourceStyle ? {
+        fontFamily: sourceStyle.fontFamily,
+        fontSize: sourceStyle.fontSize,
+        fontWeight: sourceStyle.fontWeight,
+        fontStyle: sourceStyle.fontStyle,
+        lineHeight: sourceStyle.lineHeight,
+        letterSpacing: sourceStyle.letterSpacing,
+        color: sourceStyle.color,
+        textAlign: sourceStyle.textAlign,
+        textTransform: sourceStyle.textTransform,
+        textShadow: sourceStyle.textShadow,
+        webkitTextStroke: sourceStyle.getPropertyValue('-webkit-text-stroke'),
+      } : null
 
-    if (
-      !page ||
-      !previousPageLayer ||
-      typeof page.animate !== 'function' ||
-      reduceMotion
-    ) {
+      navigationTargetRef.current = nextPostId
+
+      const page = pageRef.current
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      if (!page || typeof page.animate !== 'function' || reduceMotion) {
+        selectedPostIdRef.current = nextPostId
+        setSelectedPostId(nextPostId)
+        window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
+        await waitForPaint()
+        return
+      }
+
+      page.style.pointerEvents = 'none'
+      page.style.willChange = 'opacity, transform'
+
+      // Keep only the title alive between pages. The page itself leaves first;
+      // the destination is not shown until that outgoing motion has finished.
+      let sharedElement: HTMLElement | null = null
+      if (
+        sharedSourceTitle &&
+        sourceBounds &&
+        sourceTypography &&
+        sourceTitleText
+      ) {
+        const title = document.createElement('div')
+        title.className = 'shared-title-transition'
+        title.textContent = sourceTitleText
+        title.setAttribute('aria-hidden', 'true')
+        Object.assign(title.style, {
+          position: 'fixed',
+          left: sourceBounds.left + 'px',
+          top: sourceBounds.top + 'px',
+          width: sourceBounds.width + 'px',
+          height: sourceBounds.height + 'px',
+          margin: '0',
+          padding: '0',
+          zIndex: '1000',
+          boxSizing: 'border-box',
+          pointerEvents: 'none',
+          opacity: '1',
+          display: 'block',
+          overflow: 'visible',
+          whiteSpace: 'normal',
+          background: 'transparent',
+          border: '0',
+          borderRadius: '0',
+          boxShadow: 'none',
+          fontFamily: sourceTypography.fontFamily,
+          fontSize: sourceTypography.fontSize,
+          fontWeight: sourceTypography.fontWeight,
+          fontStyle: sourceTypography.fontStyle,
+          lineHeight: sourceTypography.lineHeight,
+          letterSpacing: sourceTypography.letterSpacing,
+          color: sourceTypography.color,
+          textAlign: sourceTypography.textAlign,
+          textTransform: sourceTypography.textTransform,
+          textShadow: sourceTypography.textShadow,
+        })
+        title.style.setProperty('-webkit-text-stroke', sourceTypography.webkitTextStroke)
+        document.body.appendChild(title)
+        sharedElement = title
+        sharedElementRef.current = title
+
+        sharedSourceRef.current = sharedSourceTitle
+        sharedSourceVisibilityRef.current = sharedSourceTitle.style.visibility
+        sharedSourceTitle.style.visibility = 'hidden'
+      }
+
+      // Forward navigation exits left and enters from the right. Back/Forward
+      // history traversal reverses that vector instead of replaying one preset.
+      const outgoingX = direction === 'forward' ? -24 : 24
+      const incomingX = -outgoingX
+      const outgoingAnimation = page.animate(
+        [
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+          { opacity: 0, transform: 'translate3d(' + outgoingX + 'px, 0, 0)' },
+        ],
+        {
+          duration: 220,
+          easing: 'cubic-bezier(.55, 0, .8, .35)',
+          fill: 'forwards',
+        },
+      )
+      activePageAnimationsRef.current = [outgoingAnimation]
+      await outgoingAnimation.finished.catch(() => undefined)
+      if (transitionId !== transitionIdRef.current) return
+      outgoingAnimation.cancel()
+
+      // The old page is now completely gone. Commit the destination while it
+      // is transparent, then measure the final geometry before it enters.
+      page.style.opacity = '0'
+      page.style.transform = 'none'
       selectedPostIdRef.current = nextPostId
       setSelectedPostId(nextPostId)
-      await waitForPaint()
-      window.scrollTo(0, nextPostId === null ? restoreScrollY : 0)
-      return
-    }
-
-    page.style.pointerEvents = 'none'
-
-    const previousPage = page.cloneNode(true) as HTMLDivElement
-    previousPage.classList.add('page-transition__snapshot')
-    previousPage.setAttribute('aria-hidden', 'true')
-    previousPage.setAttribute('inert', '')
-    previousPage.querySelectorAll('[id]').forEach(element => {
-      element.removeAttribute('id')
-    })
-    previousPageLayer.replaceChildren(previousPage)
-
-    const sourcePostId = sharedSource?.closest<HTMLElement>('[data-post-id]')?.dataset.postId
-    const snapshotTitleSelector = currentPostId !== null
-      ? '.post-detail-title'
-      : sourcePostId
-        ? '[data-post-id="' + sourcePostId + '"] .post h4, [data-post-id="' + sourcePostId + '"] .post .compact-title'
-        : null
-    if (snapshotTitleSelector) {
-      const snapshotTitle = previousPage.querySelector<HTMLElement>(snapshotTitleSelector)
-      if (snapshotTitle) snapshotTitle.style.visibility = 'hidden'
-    }
-
-    // Animate one shared typographic element. A full-card clone stretched into
-    // the detail wrapper, leaving a large empty panel and a duplicate title.
-    let sharedElement: HTMLElement | null = null
-    if (sharedSourceTitle && sourceBounds && sourceTypography && sourceTitleText) {
-      const title = document.createElement('div')
-      title.className = 'shared-title-transition'
-      title.textContent = sourceTitleText
-      title.setAttribute('aria-hidden', 'true')
-      Object.assign(title.style, {
-        position: 'fixed',
-        left: sourceBounds.left + 'px',
-        top: sourceBounds.top + 'px',
-        width: sourceBounds.width + 'px',
-        height: sourceBounds.height + 'px',
-        margin: '0',
-        padding: '0',
-        zIndex: '1000',
-        boxSizing: 'border-box',
-        pointerEvents: 'none',
-        opacity: '1',
-        display: 'block',
-        overflow: 'visible',
-        whiteSpace: 'normal',
-        background: 'transparent',
-        border: '0',
-        borderRadius: '0',
-        boxShadow: 'none',
-        fontFamily: sourceTypography.fontFamily,
-        fontSize: sourceTypography.fontSize,
-        fontWeight: sourceTypography.fontWeight,
-        fontStyle: sourceTypography.fontStyle,
-        lineHeight: sourceTypography.lineHeight,
-        letterSpacing: sourceTypography.letterSpacing,
-        color: sourceTypography.color,
-        textAlign: sourceTypography.textAlign,
-        textTransform: sourceTypography.textTransform,
-        textShadow: sourceTypography.textShadow,
-      })
-      title.style.setProperty('-webkit-text-stroke', sourceTypography.webkitTextStroke)
-      document.body.appendChild(title)
-      sharedElement = title
-      sharedElementRef.current = title
-    }
-
-    page.style.visibility = 'hidden'
-    selectedPostIdRef.current = nextPostId
-    setSelectedPostId(nextPostId)
-    window.scrollTo(0, 0)
-
-    await waitForPaint()
-    if (transitionId !== transitionIdRef.current) return
-
-    // Wait until the destination list has expanded the document before
-    // restoring a deep scroll position. Otherwise the old article height can
-    // clamp window.scrollY back to zero.
-    if (nextPostId === null && restoreScrollY > 0) {
-      window.scrollTo(0, restoreScrollY)
+      window.scrollTo(0, 0)
       await waitForPaint()
       if (transitionId !== transitionIdRef.current) return
-    }
 
-    page.style.visibility = ''
-
-    const targetSelector = nextPostId !== null
-      ? '.post-detail-title'
-      : currentPostId !== null
-        ? '[data-post-id="' + currentPostId + '"] .post h4, [data-post-id="' + currentPostId + '"] .post .compact-title'
-        : null
-    const sharedTarget = targetSelector
-      ? page.querySelector<HTMLElement>(targetSelector)
-      : null
-    const targetTitleText = sharedTarget?.textContent?.trim() ?? ''
-
-    if (
-      sharedElement &&
-      sharedTarget &&
-      sourceBounds &&
-      sourceTypography &&
-      targetTitleText === sourceTitleText
-    ) {
-      const targetBounds = sharedTarget.getBoundingClientRect()
-      const targetStyle = window.getComputedStyle(sharedTarget)
-
-      sharedTargetStyleRef.current = {
-        opacity: sharedTarget.style.opacity,
-        visibility: sharedTarget.style.visibility,
+      // Restore a list entry only after its full layout exists, avoiding a
+      // scroll clamp against the shorter article page.
+      if (nextPostId === null && restoreScrollY > 0) {
+        window.scrollTo(0, restoreScrollY)
+        await waitForPaint()
+        if (transitionId !== transitionIdRef.current) return
       }
-      sharedTargetRef.current = sharedTarget
-      sharedTarget.style.visibility = 'visible'
-      sharedTarget.style.opacity = '0'
 
+      const targetSelector = nextPostId !== null
+        ? '.post-detail-title'
+        : currentPostId !== null
+          ? '[data-post-id="' + currentPostId + '"] .post h4, [data-post-id="' + currentPostId + '"] .post .compact-title'
+          : null
+      const sharedTarget = targetSelector
+        ? page.querySelector<HTMLElement>(targetSelector)
+        : null
+      const targetTitleText = sharedTarget?.textContent?.trim() ?? ''
+      let sharedAnimation: Animation | null = null
+      let revealAnimation: Animation | null = null
+
+      if (
+        sharedElement &&
+        sharedTarget &&
+        sourceBounds &&
+        sourceTypography &&
+        targetTitleText === sourceTitleText
+      ) {
+        const targetBounds = sharedTarget.getBoundingClientRect()
+        const targetStyle = window.getComputedStyle(sharedTarget)
+
+        sharedTargetStyleRef.current = {
+          opacity: sharedTarget.style.opacity,
+          visibility: sharedTarget.style.visibility,
+        }
+        sharedTargetRef.current = sharedTarget
+        sharedTarget.style.visibility = 'visible'
+        sharedTarget.style.opacity = '0'
+
+        sharedAnimation = sharedElement.animate(
+          [
+            {
+              left: sourceBounds.left + 'px',
+              top: sourceBounds.top + 'px',
+              width: sourceBounds.width + 'px',
+              height: sourceBounds.height + 'px',
+              fontSize: sourceTypography.fontSize,
+              fontWeight: sourceTypography.fontWeight,
+              lineHeight: sourceTypography.lineHeight,
+              letterSpacing: sourceTypography.letterSpacing,
+              color: sourceTypography.color,
+              opacity: 1,
+              filter: 'blur(0px)',
+            },
+            {
+              left: targetBounds.left + 'px',
+              top: targetBounds.top + 'px',
+              width: targetBounds.width + 'px',
+              height: targetBounds.height + 'px',
+              fontSize: targetStyle.fontSize,
+              fontWeight: targetStyle.fontWeight,
+              lineHeight: targetStyle.lineHeight,
+              letterSpacing: targetStyle.letterSpacing,
+              color: targetStyle.color,
+              opacity: 1,
+              filter: 'blur(.25px)',
+              offset: .88,
+            },
+            {
+              left: targetBounds.left + 'px',
+              top: targetBounds.top + 'px',
+              width: targetBounds.width + 'px',
+              height: targetBounds.height + 'px',
+              fontSize: targetStyle.fontSize,
+              fontWeight: targetStyle.fontWeight,
+              lineHeight: targetStyle.lineHeight,
+              letterSpacing: targetStyle.letterSpacing,
+              opacity: 0,
+              filter: 'blur(1px)',
+            },
+          ],
+          {
+            duration: 520,
+            easing: 'cubic-bezier(.2, .82, .2, 1)',
+            fill: 'forwards',
+          },
+        )
+
+        revealAnimation = sharedTarget.animate(
+          [
+            { opacity: 0, filter: 'blur(1px)' },
+            { opacity: 1, filter: 'blur(0px)' },
+          ],
+          {
+            duration: 130,
+            delay: 410,
+            easing: 'cubic-bezier(.16, 1, .3, 1)',
+            fill: 'both',
+          },
+        )
+      }
+
+      page.style.visibility = ''
+      const incomingAnimation = page.animate(
+        [
+          { opacity: 0, transform: 'translate3d(' + incomingX + 'px, 0, 0)' },
+          { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+        ],
+        {
+          duration: 350,
+          easing: 'cubic-bezier(.2, .82, .2, 1)',
+          fill: 'both',
+        },
+      )
+
+      // Small, directional item arrivals add rhythm without blurring or
+      // crossfading a second page over the first one.
       const transitionItems = Array.from(
         page.querySelectorAll<HTMLElement>('[data-transition-item]'),
       ).filter(element => element !== sharedTarget)
-
       transitionItemStylesRef.current = transitionItems.map(element => ({
         element,
         opacity: element.style.opacity,
         transform: element.style.transform,
         filter: element.style.filter,
       }))
+      const itemOffsetY = direction === 'forward' ? 7 : -7
       transitionItems.forEach(element => {
         element.style.opacity = '0'
-        element.style.transform = 'none'
-        element.style.filter = 'blur(9px)'
+        element.style.transform = 'translate3d(0, ' + itemOffsetY + 'px, 0)'
+        element.style.filter = 'none'
       })
-
-      const sharedAnimation = sharedElement.animate(
-        [
-          {
-            left: sourceBounds.left + 'px',
-            top: sourceBounds.top + 'px',
-            width: sourceBounds.width + 'px',
-            height: sourceBounds.height + 'px',
-            fontSize: sourceTypography.fontSize,
-            fontWeight: sourceTypography.fontWeight,
-            lineHeight: sourceTypography.lineHeight,
-            letterSpacing: sourceTypography.letterSpacing,
-            color: sourceTypography.color,
-            opacity: 1,
-            filter: 'blur(0px)',
-          },
-          {
-            left: targetBounds.left + 'px',
-            top: targetBounds.top + 'px',
-            width: targetBounds.width + 'px',
-            height: targetBounds.height + 'px',
-            fontSize: targetStyle.fontSize,
-            fontWeight: targetStyle.fontWeight,
-            lineHeight: targetStyle.lineHeight,
-            letterSpacing: targetStyle.letterSpacing,
-            color: targetStyle.color,
-            opacity: 1,
-            filter: 'blur(.35px)',
-            offset: .82,
-          },
-          {
-            left: targetBounds.left + 'px',
-            top: targetBounds.top + 'px',
-            width: targetBounds.width + 'px',
-            height: targetBounds.height + 'px',
-            fontSize: targetStyle.fontSize,
-            lineHeight: targetStyle.lineHeight,
-            letterSpacing: targetStyle.letterSpacing,
-            opacity: 0,
-            filter: 'blur(2px)',
-          },
-        ],
-        {
-          duration: 560,
-          easing: 'cubic-bezier(.2, .82, .2, 1)',
-          fill: 'forwards',
-        },
-      )
-
-      // Whole-page motion stays opacity-only to avoid expensive full-surface blur.
-      const outgoingAnimation = previousPage.animate(
-        [{ opacity: 1 }, { opacity: 0 }],
-        {
-          duration: 360,
-          easing: 'cubic-bezier(.35, 0, .2, 1)',
-          fill: 'forwards',
-        },
-      )
-      const incomingAnimation = page.animate(
-        [{ opacity: 0 }, { opacity: 1 }],
-        {
-          duration: 420,
-          easing: 'cubic-bezier(.2, .82, .2, 1)',
-          fill: 'both',
-        },
-      )
-      const revealAnimation = sharedTarget.animate(
-        [
-          { opacity: 0, filter: 'blur(9px)' },
-          { opacity: 1, filter: 'blur(0px)' },
-        ],
-        {
-          duration: 220,
-          delay: 300,
-          easing: 'cubic-bezier(.16, 1, .3, 1)',
-          fill: 'both',
-        },
-      )
       const itemAnimations = transitionItems.map((item, index) =>
         item.animate(
           [
-            { opacity: 0, filter: 'blur(9px)' },
-            { opacity: 1, filter: 'blur(0px)' },
+            {
+              opacity: 0,
+              transform: 'translate3d(0, ' + itemOffsetY + 'px, 0)',
+            },
+            {
+              opacity: 1,
+              transform: 'translate3d(0, 0, 0)',
+            },
           ],
           {
-            duration: 420,
-            delay: 45 + Math.min(index, 8) * 28,
+            duration: 260,
+            delay: 24 + Math.min(index, 8) * 18,
             easing: 'cubic-bezier(.2, .78, .2, 1)',
             fill: 'both',
           },
         ),
       )
 
+      const orphanTitleAnimation = sharedElement && !sharedAnimation
+        ? sharedElement.animate(
+            [
+              { opacity: 1, transform: 'translate3d(0, 0, 0)' },
+              { opacity: 0, transform: 'translate3d(' + outgoingX + 'px, 0, 0)' },
+            ],
+            {
+              duration: 150,
+              easing: 'cubic-bezier(.35, 0, .2, 1)',
+              fill: 'forwards',
+            },
+          )
+        : null
+
       activePageAnimationsRef.current = [
-        sharedAnimation,
-        outgoingAnimation,
         incomingAnimation,
-        revealAnimation,
         ...itemAnimations,
+        ...(sharedAnimation ? [sharedAnimation] : []),
+        ...(revealAnimation ? [revealAnimation] : []),
+        ...(orphanTitleAnimation ? [orphanTitleAnimation] : []),
       ]
 
-      await finishPageTransition(transitionId, 1000)
-      return
-    }
-
-    // Direct-entry navigation keeps the layered slide as a dependable fallback.
-    sharedElement?.remove()
-    sharedElementRef.current = null
-
-    const transitionItems = Array.from(
-      page.querySelectorAll<HTMLElement>('[data-transition-item]'),
-    )
-    transitionItemStylesRef.current = transitionItems.map(element => ({
-      element,
-      opacity: element.style.opacity,
-      transform: element.style.transform,
-      filter: element.style.filter,
-    }))
-    transitionItems.forEach(element => {
-      element.style.opacity = '0'
-      element.style.transform = 'none'
-      element.style.filter = 'blur(9px)'
-    })
-
-    const pageTiming: KeyframeAnimationOptions = {
-      duration: direction === 'back' ? 440 : 480,
-      easing: 'cubic-bezier(.2, .82, .2, 1)',
-      fill: 'both',
-    }
-
-    // The page itself fades only; blur is limited to the smaller items below.
-    const outgoingAnimation = previousPage.animate(
-      [{ opacity: 1 }, { opacity: 0 }],
-      pageTiming,
-    )
-    const incomingAnimation = page.animate(
-      [{ opacity: 0 }, { opacity: 1 }],
-      pageTiming,
-    )
-    const itemAnimations = transitionItems.map((item, index) =>
-      item.animate(
-        [
-          { opacity: 0, filter: 'blur(9px)' },
-          { opacity: 1, filter: 'blur(0px)' },
-        ],
-        {
-          duration: item.classList.contains('back-link') ? 360 : 420,
-          delay: item.classList.contains('back-link') ? 35 : 45 + Math.min(index, 8) * 26,
-          easing: 'cubic-bezier(.2, .78, .2, 1)',
-          fill: 'both',
-        },
-      ),
-    )
-
-    activePageAnimationsRef.current = [
-      outgoingAnimation,
-      incomingAnimation,
-      ...itemAnimations,
-    ]
-
-    await finishPageTransition(transitionId, 1200)
+      await finishPageTransition(transitionId, 1100)
     } catch {
       // Never leave the application hidden or non-interactive if WAAPI rejects
       // a keyframe or a browser interrupts the transition unexpectedly.
@@ -741,7 +724,7 @@ export default function App() {
               title={`Layout: ${VIEW_MODES[viewMode].label}`}
               aria-label={`Change layout. Current: ${VIEW_MODES[viewMode].label}`}
             >
-              <span key={viewMode} className="nav-icon-swap" aria-hidden="true">
+              <span key={viewMode} className="nav-icon-swap nav-icon-swap--layout-next" aria-hidden="true">
                 {(() => {
                   const ViewIcon = VIEW_MODES[viewMode].icon
                   return <ViewIcon className="ui-icon" size={15} strokeWidth={2} />
@@ -757,7 +740,7 @@ export default function App() {
               title={`Theme: ${theme === 'light' ? 'Light' : 'Dark'}`}
               aria-label={`Change theme. Current: ${theme === 'light' ? 'Light' : 'Dark'}`}
             >
-              <span key={theme} className="nav-icon-swap" aria-hidden="true">
+              <span key={theme} className={'nav-icon-swap nav-icon-swap--theme-' + theme} aria-hidden="true">
                 {theme === 'light' ? (
                   <Sun className="ui-icon" size={15} strokeWidth={2} />
                 ) : (
@@ -777,7 +760,7 @@ export default function App() {
               aria-expanded={searchOpen}
               aria-controls="navbar-search"
             >
-              <span key={searchOpen ? 'close' : 'search'} className="nav-icon-swap" aria-hidden="true">
+              <span key={searchOpen ? 'close' : 'search'} className={'nav-icon-swap nav-icon-swap--search-' + (searchOpen ? 'open' : 'closed')} aria-hidden="true">
                 {searchOpen ? (
                   <X className="ui-icon" size={15} strokeWidth={2} />
                 ) : (
@@ -824,11 +807,6 @@ export default function App() {
       </header>
 
       <div className="page-stage">
-        <div
-          ref={previousPageLayerRef}
-          className="page-previous-layer"
-          aria-hidden="true"
-        />
         <div ref={pageRef} className="page-transition">
       {selectedPost ? (
         <PostPage post={selectedPost} />
